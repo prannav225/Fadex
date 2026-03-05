@@ -5,6 +5,7 @@ import {
   Courier_Prime,
   Orbitron,
 } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const inter = Inter({
@@ -46,6 +47,7 @@ export default function RootLayout({
         className={`${inter.variable} ${spaceGrotesk.variable} ${courierPrime.variable} ${orbitron.variable} antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );
