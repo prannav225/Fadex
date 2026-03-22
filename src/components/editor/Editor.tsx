@@ -169,11 +169,11 @@ export function Editor({ scriptId }: EditorProps) {
   });
 
   return (
-    <div className="flex justify-center items-start relative w-full px-4 sm:px-0 transition-all duration-500">
+    <div className="relative min-h-[calc(100vh-8rem)]">
       {/* Settings / Floating Utilities */}
       <div
         id="editor-floating-tools"
-        className="fixed bottom-24 sm:bottom-6 right-4 sm:right-6 flex flex-col gap-2 z-40 print:hidden"
+        className="fixed bottom-24 sm:bottom-6 right-4 sm:right-6 flex flex-col gap-2 z-20 print:hidden"
       >
         <button
           onClick={() => setIsNavOpen(!isNavOpen)}
@@ -219,131 +219,138 @@ export function Editor({ scriptId }: EditorProps) {
         </button>
       </div>
 
-      {/* Mobile Backdrop Overlay */}
+      {/* Backdrop Overlay for Mobile */}
       <div
         onClick={() => setIsNavOpen(false)}
         className={cn(
-          "fixed inset-0 bg-black/60 backdrop-blur-sm z-40 xl:hidden transition-opacity duration-500",
-          isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          "fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-500",
+          isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
       />
 
-      <div
-        id="scene-navigator"
-        className={cn(
-          "z-[60] shrink-0 overflow-y-auto overflow-x-hidden bg-background/95 xl:bg-background/30 backdrop-blur-3xl border-r xl:border border-white/10 xl:rounded-[2.5rem] shadow-2xl transition-all duration-500 print:hidden",
-          
-          // Layout Geometry
-          "fixed top-20 sm:top-24 left-2 w-[calc(94vw-16px)] max-w-[420px] h-fit max-h-[75vh] p-4 sm:p-6 rounded-3xl xl:rounded-[2.5rem] xl:w-72 xl:sticky xl:top-32 xl:h-[calc(100vh-12rem)] xl:mr-8 xl:pt-6 xl:pb-6 lg:ml-0 lg:left-0",
-          
-          // Open/Close States
-          isNavOpen
-            ? "translate-x-0 opacity-100"
-            : "-translate-x-[120%] xl:-translate-x-[150%] xl:w-0 xl:p-0 xl:m-0 opacity-0 pointer-events-none"
-        )}
-      >
-        <div className="flex items-center justify-between mb-4 xl:mb-6 px-2">
-          <h3 className="font-semibold text-[10px] xl:text-xs uppercase tracking-[0.2em] text-[#136f63]/60">
-            Scenes
-          </h3>
-          <button 
-            onClick={() => setIsNavOpen(false)}
-            className="xl:hidden p-2 -mr-2 rounded-full hover:bg-black/5 text-[#136f63]"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="space-y-1">
-          {scenesList.map((scene) => (
-            <button
-              key={scene.id}
-              onClick={() => {
-                document
-                  .getElementById(`block-${scene.id}`)
-                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                setActiveBlockId(scene.id);
-                if (window.innerWidth < 1280) setIsNavOpen(false); // Auto-close drawer perfectly on tap
-              }}
-              className={cn(
-                "w-full text-left px-3 py-2.5 xl:py-1.5 rounded-xl xl:rounded-md text-[13px] font-medium transition-all group/scene animate-in fade-in slide-in-from-left-2",
-                activeBlockId === scene.id
-                  ? "bg-[#136f63] text-white font-bold shadow-lg shadow-[#136f63]/20 scale-[1.02]"
-                  : "text-zinc-500 hover:bg-[#136f63]/5 hover:text-[#136f63]",
-              )}
-            >
-              <span className={cn(
-                "font-mono text-[10px] mr-2",
-                activeBlockId === scene.id ? "text-white/70" : "text-[#136f63]/50"
-              )}>
-                {scene.num}
-              </span>
-              <span className="whitespace-normal leading-tight">
-                {(scene.content || "Untitled Scene").toUpperCase()}
-              </span>
-            </button>
-          ))}
-          {scenesList.length === 0 && (
-            <div className="text-xs text-zinc-400 px-2 italic">
-              No scenes yet.
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Editor Main Canvas */}
-      <div
-        className={cn(
-          "w-full max-w-[850px] mb-32 transition-all duration-500 shrink",
-          "print:max-w-none print:m-0 print:p-0 print:w-full",
-          isFocusMode ? "mt-12" : "mt-20 sm:mt-32"
-        )}
-      >
+      {/* Main Structural Content - Split from Flex to fix Chrome positioning */}
+      <div className="flex flex-col lg:flex-row items-start justify-center pt-24 lg:pt-32 px-4 lg:px-8">
         <div
-          id="script-editor-canvas"
+          id="scene-navigator"
           className={cn(
-            "space-y-0 relative bg-white dark:bg-zinc-900 border border-border rounded-sm shadow-[0_10px_50px_rgba(0,0,0,0.04)] py-8 sm:py-12 lg:py-24 px-4 sm:px-12 lg:px-[100px] print:p-0 print:m-0 print:border-none print:shadow-none print:bg-white print:text-black print:min-h-0",
-            "editor-page-strip overflow-x-hidden sm:overflow-x-visible",
+            "z-40 shrink-0 overflow-y-auto overflow-x-hidden bg-background/95 lg:bg-background/30 backdrop-blur-3xl border-r lg:border border-white/10 lg:rounded-[2.5rem] shadow-2xl transition-all duration-500 print:hidden",
+
+            // Layout Geometry
+            "fixed top-28 sm:top-32 left-2 w-[calc(94vw-16px)] max-w-[420px] h-fit max-h-[75vh] p-4 sm:p-6 rounded-3xl lg:sticky lg:top-32 lg:w-72 lg:h-[calc(100vh-12rem)] lg:mr-8 lg:mt-0 lg:pt-6 lg:pb-6 lg:ml-0 lg:left-0 lg:rounded-[2.5rem]",
+
+            // Open/Close States
+            isNavOpen
+              ? "translate-x-0 opacity-100"
+              : "-translate-x-[120%] lg:-translate-x-[150%] lg:w-0 lg:p-0 lg:m-0 opacity-0 pointer-events-none",
           )}
         >
-          {/* Page Break Labels - Only show up to actual length */}
-          {Array.from({
-            length: Math.max(
-              1,
-              Math.ceil((blocksWithScenes.length * 60) / 1056),
-            ),
-          }).map((_, i) => (
-            <div
-              key={i + 1}
-              className="editor-page-strip-label print:hidden"
-              style={{ top: `${(i + 1) * 1056}px` }}
+          <div className="flex items-center justify-between mb-4 lg:mb-6 px-2">
+            <h3 className="font-semibold text-[10px] lg:text-xs uppercase tracking-[0.2em] text-[#136f63]/60">
+              Scenes
+            </h3>
+            <button
+              onClick={() => setIsNavOpen(false)}
+              className="lg:hidden p-2 -mr-2 rounded-full hover:bg-black/5 text-[#136f63]"
             >
-              PAGE {i + 1}
-            </div>
-          ))}{" "}
-          {blocksWithScenes.map((block, index) => (
-            <EditorBlock
-              key={block.id}
-              block={block}
-              allBlocks={scriptState.blocks}
-              sceneNumber={block.sceneNum}
-              isFocusMode={isFocusMode}
-              index={index}
-              isActive={block.id === activeBlockId}
-              onUpdate={(id, content) => updateBlock(scriptId, id, content)}
-              onKeyDown={handleKeyDown}
-              onFocus={() => setActiveBlockId(block.id)}
-              onDragStart={(e, id) => handleDragStart(e, id)}
-              onDragOver={(e) => handleDragOver(e)}
-              onDrop={(e, id) => handleDrop(e, id)}
-            />
-          ))}
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="space-y-1">
+            {scenesList.map((scene) => (
+              <button
+                key={scene.id}
+                onClick={() => {
+                  document
+                    .getElementById(`block-${scene.id}`)
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  setActiveBlockId(scene.id);
+                  if (window.innerWidth < 1024) setIsNavOpen(false);
+                }}
+                className={cn(
+                  "w-full text-left px-3 py-2.5 lg:py-1.5 rounded-xl lg:rounded-md text-[13px] font-medium transition-all group/scene animate-in fade-in slide-in-from-left-2",
+                  activeBlockId === scene.id
+                    ? "bg-[#136f63] text-white font-bold shadow-lg shadow-[#136f63]/20 scale-[1.02]"
+                    : "text-zinc-500 hover:bg-[#136f63]/5 hover:text-[#136f63]",
+                )}
+              >
+                <span
+                  className={cn(
+                    "font-mono text-[10px] mr-2",
+                    activeBlockId === scene.id
+                      ? "text-white/70"
+                      : "text-[#136f63]/50",
+                  )}
+                >
+                  {scene.num}
+                </span>
+                <span className="whitespace-normal leading-tight">
+                  {(scene.content || "Untitled Scene").toUpperCase()}
+                </span>
+              </button>
+            ))}
+            {scenesList.length === 0 && (
+              <div className="text-xs text-zinc-400 px-2 italic">
+                No scenes yet.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Editor Main Canvas */}
+        <div
+          className={cn(
+            "w-full max-w-[850px] mb-32 shrink",
+            "print:max-w-none print:m-0 print:p-0 print:w-full",
+            isFocusMode ? "mt-12" : "mt-20 lg:mt-0",
+          )}
+        >
+          <div
+            id="script-editor-canvas"
+            className={cn(
+              "space-y-0 relative bg-white dark:bg-zinc-900 border border-border rounded-sm shadow-[0_10px_50px_rgba(0,0,0,0.04)] py-8 sm:py-12 lg:py-24 px-4 sm:px-12 lg:px-[100px] print:p-0 print:m-0 print:border-none print:shadow-none print:bg-white print:text-black print:min-h-0",
+              "editor-page-strip overflow-x-hidden sm:overflow-x-visible",
+            )}
+          >
+            {/* Page Break Labels */}
+            {Array.from({
+              length: Math.max(
+                1,
+                Math.ceil((blocksWithScenes.length * 60) / 1056),
+              ),
+            }).map((_, i) => (
+              <div
+                key={i + 1}
+                className="editor-page-strip-label print:hidden"
+                style={{ top: `${(i + 1) * 1056}px` }}
+              >
+                PAGE {i + 1}
+              </div>
+            ))}
+            {blocksWithScenes.map((block, index) => (
+              <EditorBlock
+                key={block.id}
+                block={block}
+                allBlocks={scriptState.blocks}
+                sceneNumber={block.sceneNum}
+                isFocusMode={isFocusMode}
+                index={index}
+                isActive={block.id === activeBlockId}
+                onUpdate={(id, content) => updateBlock(scriptId, id, content)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setActiveBlockId(block.id)}
+                onDragStart={(e, id) => handleDragStart(e, id)}
+                onDragOver={(e) => handleDragOver(e)}
+                onDrop={(e, id) => handleDrop(e, id)}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Keyboard Shortcuts Dialog */}
-      <KeyboardShortcutsModal 
-        isOpen={isShortcutsOpen} 
-        onOpenChange={setIsShortcutsOpen} 
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsOpen}
+        onOpenChange={setIsShortcutsOpen}
       />
 
       {/* Mobile Formatting Dock - Bold brutalist editorial design */}
@@ -362,7 +369,11 @@ export function Editor({ scriptId }: EditorProps) {
               key={fmt.type}
               onClick={() => {
                 if (activeBlockId) {
-                  changeBlockType(scriptId, activeBlockId, fmt.type as BlockType);
+                  changeBlockType(
+                    scriptId,
+                    activeBlockId,
+                    fmt.type as BlockType,
+                  );
                   // Ensure focus is retained after changing type by finding textarea
                   const el = document.getElementById(`block-${activeBlockId}`);
                   const textarea = el?.querySelector("textarea");
@@ -373,7 +384,7 @@ export function Editor({ scriptId }: EditorProps) {
                 "snap-start shrink-0 px-5 py-3 text-[10px] font-brand uppercase tracking-[0.3em] border-r border-white/10 last:border-r-0 transition-all duration-300",
                 activeBlock?.type === fmt.type
                   ? "bg-[#136F63] text-[#F3EFE0] font-black shadow-[inset_0_-2px_0_#F3EFE0]"
-                  : "bg-transparent text-white/50 hover:text-white hover:bg-white/5"
+                  : "bg-transparent text-white/50 hover:text-white hover:bg-white/5",
               )}
             >
               {fmt.label}
