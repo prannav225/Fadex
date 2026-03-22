@@ -227,8 +227,8 @@
   background-image: linear-gradient(
     to bottom,
     transparent 1055px,
-    rgba(19, 111, 99, 0.05) 1055px,
-    rgba(19, 111, 99, 0.05) 1056px,
+    rgba(19, 111, 99, 0.15) 1055px,
+    rgba(19, 111, 99, 0.15) 1056px,
     transparent 1056px
   );
   background-size: 100% 1056px;
@@ -238,7 +238,7 @@
 .editor-page-strip-label {
   position: absolute;
   right: -80px;
-  color: rgba(19, 111, 99, 0.2);
+  color: rgba(19, 111, 99, 0.5);
   font-family: var(--font-brand);
   font-size: 9px;
   letter-spacing: 0.1em;

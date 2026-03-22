@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Plus, MoreVertical, FileText, Trash, Edit2 } from "lucide-react";
 
 import { useScriptsStore } from "@/store/scripts";
+import { useEditorStore } from "@/store/editor";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ import {
 export function Dashboard() {
   const router = useRouter();
   const { scripts, addScript, renameScript, deleteScript } = useScriptsStore();
+  const { deleteScriptData } = useEditorStore();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -70,6 +72,7 @@ export function Dashboard() {
   const handleDeleteConfirm = () => {
     if (scriptToDelete) {
       deleteScript(scriptToDelete.id);
+      deleteScriptData(scriptToDelete.id);
       setIsDeleteOpen(false);
       setScriptToDelete(null);
     }
@@ -123,7 +126,7 @@ export function Dashboard() {
                 className="group relative overflow-hidden rounded-[2rem] lg:rounded-[2.5rem] bg-card/40 backdrop-blur-3xl border border-border/50 shadow-sm hover:shadow-[0_20px_60px_-15px_rgba(19,111,99,0.1)] hover:-translate-y-1.5 hover:border-[#136F63]/40 transition-all duration-500 cursor-pointer"
                 onClick={() => router.push(`/editor/${script.id}`)}
               >
-                <div className="aspect-[16/10] sm:aspect-[4/3] bg-background/50 flex items-center justify-center relative border-b border-border/10 overflow-hidden">
+                <div className="aspect-16/10 sm:aspect-4/3 bg-background/50 flex items-center justify-center relative border-b border-border/10 overflow-hidden">
                   <div className="absolute inset-0 opacity-5 flex flex-col gap-2 p-4">
                     <div className="h-1 w-2/3 bg-[#191919] rounded-full" />
                     <div className="h-1 w-full bg-[#191919] rounded-full" />

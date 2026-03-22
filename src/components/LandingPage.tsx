@@ -11,7 +11,7 @@ interface LandingPageProps {
 
 export function LandingPage({ onStart }: LandingPageProps) {
   return (
-    <div className="min-h-screen lg:h-screen w-full bg-[#F3EFE0] text-[#191919] font-sans selection:bg-[#136F63]/20 overflow-x-hidden lg:overflow-hidden flex flex-col relative transition-all duration-500">
+    <div className="min-h-screen w-full bg-[#F3EFE0] text-[#191919] font-sans selection:bg-[#136F63]/20 overflow-x-hidden flex flex-col relative transition-all duration-500">
       {/* Decorative Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-5%] w-[60%] lg:w-[40%] h-[40%] bg-[#136F63]/5 rounded-full blur-[120px]" />
@@ -45,7 +45,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
             Designed for storytellers
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-9xl font-display font-black tracking-tighter leading-[0.9] lg:leading-[0.85] text-[#191919]">
+          <h1 className="text-4xl md:text-7xl lg:text-9xl font-display font-black tracking-tighter leading-[0.9] lg:leading-[0.85] text-[#191919]">
             Write the scenes. <br className="hidden sm:block" />
             <span className="text-[#136F63] italic font-serif serif relative inline-block">
               Shape

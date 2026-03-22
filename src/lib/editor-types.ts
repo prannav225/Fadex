@@ -50,7 +50,7 @@ export const getSmartNextBlockType = (current: BlockType): BlockType => {
     case "character":
       return "dialogue";
     case "dialogue":
-      return "character";
+      return "action";
     case "parenthetical":
       return "dialogue";
     case "transition":

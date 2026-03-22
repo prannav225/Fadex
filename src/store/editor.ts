@@ -29,6 +29,7 @@ interface EditorState {
   moveBlock: (scriptId: string, draggedId: string, dropId: string) => void;
   undo: (scriptId: string) => void;
   redo: (scriptId: string) => void;
+  deleteScriptData: (scriptId: string) => void;
 }
 
 const pushHistory = (state: ScopedEditorState) => {
@@ -252,6 +253,12 @@ export const useEditorStore = create<EditorState>()(
               },
             },
           };
+        }),
+      deleteScriptData: (scriptId) =>
+        set((state) => {
+          const newScripts = { ...state.scripts };
+          delete newScripts[scriptId];
+          return { scripts: newScripts };
         }),
     }),
     {
