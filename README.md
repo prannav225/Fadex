@@ -12,44 +12,29 @@ FADEX is a premium, distraction-free screenwriting workspace designed to keep yo
 
 ### Cinematic Formatting Engine
 
-- **Industry Standard Spacing:** Automatically handles standard screenplay margins and indentations for all block types (Scene Headings, Action, Character, Dialogue, etc.).
-- **Smart Cycle:** Press `Tab` to cycle between types, or `Shift+Enter` for multiline actions.
-- **Courier Prime Canvas:** 100% accurate page-feel using the industry-standard monospace font.
+### Liquid Mobile Experience
 
-### Context-Aware Suggestions
-
-- **Smart Autocomplete:** FADEX learns your characters, locations, and scene times as you write, providing instant suggestions to speed up your process.
-- **Typewriter Scrolling:** In Focus Mode, your active line stays centered, mimicking a physical typewriter for maximum concentration.
+- **Native Ergonomics:** A custom touch-driven formatting dock stays pinned above your keyboard, replacing complex key combos with visceral high-speed toggles.
+- **Responsive Geometry:** The entire editor canvas uses a "liquid structural collapse" system, adapting margins and typography on-the-fly to fit narrow phone viewports without sacrificing industry-standard density.
+- **Floating Scene Navigation:** A sleek, content-aware drawer keeps your outline reachable with a single flick, purpose-built for mobile storyboarding.
 
 ### Professional Workspace
 
-- **Scene Navigator:** Collapsible glassmorphism sidebar for instant jumping between scenes.
-- **Robust Undo/Redo:** 50-step history to protect your creative process.
-- **Drag & Drop Reordering:** Reorder blocks or entire scenes with a smooth, intuitive interface.
-- **Integrated Export:** Crystal-clear PDF generation using a re-engineered print engine that strips the UI for a clean, professional script.
+- **Smart Formatting:** Press `Tab` to cycle between types, or `Enter` for intelligent context-aware jumping (Dialogue -> Action default).
+- **Courier Prime Canvas:** 100% accurate page-feel with automatic "Parenthetical" wrapping and scene numbering.
+- **Integrated Export:** Crystal-clear PDF generation using a dedicated print engine that strips the UI for a clean, studio-grade screenplay.
 
 ### Private & Secure
 
-- **Local-First Storage:** Your scripts never leave your browser. Everything is stored securely in LocalStorage.
-- **Honest MVP:** Built for the craft, with a transparent roadmap toward cloud collaboration and production databases.
+- **Local-First Storage:** Your scripts never leave your browser. FADEX utilizes high-performance Zustand persistence to ensure zero-lag saving with instant local recovery.
+- **Project-Specific Cleanup:** Smart database management that wipes associated block data when a script is deleted, keeping your browser storage lean and professional.
 
 ---
 
 ## Tech Stack
 
-- **Framework:** Next.js 16 (App Router) & React 19
-- **Styling:** Tailwind CSS v4
-- **State Management:** Zustand (with Persistence)
-- **Editor Core:** Optimized for zero-lag with `react-textarea-autosize`
+- **Framework:** Next.js 16 (Canary) & React 19
+- **Styling:** Tailwind CSS v4 (Liquid Architecture)
+- **State Management:** Zustand 5 (Persistent Storage)
+- **Editor Core:** Optimized zero-lag engine using `react-textarea-autosize`
 - **Typography:** Orbitron (Brand), Inter & Space Grotesk (UI), Courier Prime (Editor)
-
----
-
-## Design Language
-
-FADEX uses a sophisticated palette:
-
-- **Primary:** #136F63 (Blue Spruce)
-- **Background:** #F3EFE0 (Eggshell)
-- **Typography:** #191919 (Carbon Black)
-- **Accents:** Subtle glassmorphism and organic paper textures.
