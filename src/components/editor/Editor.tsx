@@ -31,7 +31,23 @@ export function Editor({ scriptId }: EditorProps) {
   const activeBlock = scriptState?.blocks.find((b) => b.id === activeBlockId);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [isNavOpen, setIsNavOpen] = useState(true);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+
+  // Detect mobile keyboard
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+
+    const handleResize = () => {
+      const isVisible =
+        window.visualViewport!.height < window.innerHeight - 150;
+      setIsKeyboardVisible(isVisible);
+    };
+
+    window.visualViewport.addEventListener("resize", handleResize);
+    return () =>
+      window.visualViewport?.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     initializeScript(scriptId);
@@ -229,14 +245,14 @@ export function Editor({ scriptId }: EditorProps) {
       />
 
       {/* Main Structural Content - Split from Flex to fix Chrome positioning */}
-      <div className="flex flex-col lg:flex-row items-start justify-center pt-24 lg:pt-32 px-4 lg:px-8">
+      <div className="flex flex-col lg:flex-row items-start justify-center pt-20 lg:pt-32 px-4 lg:px-8">
         <div
           id="scene-navigator"
           className={cn(
             "z-40 shrink-0 overflow-y-auto overflow-x-hidden bg-background/95 lg:bg-background/30 backdrop-blur-3xl border-r lg:border border-white/10 lg:rounded-[2.5rem] shadow-2xl transition-all duration-500 print:hidden",
 
             // Layout Geometry
-            "fixed top-28 sm:top-32 left-2 w-[calc(94vw-16px)] max-w-[420px] h-fit max-h-[75vh] p-4 sm:p-6 rounded-3xl lg:sticky lg:top-32 lg:w-72 lg:h-[calc(100vh-12rem)] lg:mr-8 lg:mt-0 lg:pt-6 lg:pb-6 lg:ml-0 lg:left-0 lg:rounded-[2.5rem]",
+            "fixed top-24 sm:top-28 left-2 w-[calc(94vw-16px)] max-w-[420px] h-fit max-h-[75vh] p-4 sm:p-6 rounded-3xl lg:sticky lg:top-32 lg:w-72 lg:h-[calc(100vh-12rem)] lg:mr-8 lg:mt-0 lg:pt-6 lg:pb-6 lg:ml-0 lg:left-0 lg:rounded-[2.5rem]",
 
             // Open/Close States
             isNavOpen
@@ -301,7 +317,7 @@ export function Editor({ scriptId }: EditorProps) {
           className={cn(
             "w-full max-w-[850px] mb-32 shrink",
             "print:max-w-none print:m-0 print:p-0 print:w-full",
-            isFocusMode ? "mt-12" : "mt-20 lg:mt-0",
+            isFocusMode ? "mt-6" : "mt-8 lg:mt-0",
           )}
         >
           <div
@@ -354,15 +370,26 @@ export function Editor({ scriptId }: EditorProps) {
       />
 
       {/* Mobile Formatting Dock - Bold brutalist editorial design */}
-      <div className="fixed bottom-0 left-0 right-0 w-full z-50 bg-[#191919] border-t border-[#136F63]/30 pt-3 pb-8 sm:hidden shadow-[0_-20px_40px_rgba(0,0,0,0.5)] print:hidden">
+      <div
+        style={{
+          bottom:
+            typeof window !== "undefined" && window.visualViewport
+              ? Math.max(0, window.innerHeight - window.visualViewport.height)
+              : 0,
+        }}
+        className={cn(
+          "fixed left-0 right-0 w-full z-50 bg-[#191919] border-t border-[#136F63]/30 pt-3 pb-8 sm:hidden shadow-[0_-20px_40px_rgba(0,0,0,0.5)] transition-all duration-300 print:hidden",
+          isKeyboardVisible && "pb-4", // Reduce padding when keyboard is up for more screen space
+        )}
+      >
         <div className="flex items-center overflow-x-auto hide-scrollbar snap-x">
           {[
             { label: "SCENE", type: "scene_heading" },
             { label: "ACTION", type: "action" },
-            { label: "CHAR", type: "character" },
+            { label: "CHARACTER", type: "character" },
             { label: "DIALOGUE", type: "dialogue" },
-            { label: "PAREN", type: "parenthetical" },
-            { label: "TRANS", type: "transition" },
+            { label: "PARENTHETICAL", type: "parenthetical" },
+            { label: "TRANSITION", type: "transition" },
             { label: "SHOT", type: "shot" },
           ].map((fmt) => (
             <button

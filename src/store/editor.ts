@@ -6,6 +6,7 @@ import {
   getNextBlockType,
   getSmartNextBlockType,
 } from "@/lib/editor-types";
+import { generateId } from "@/lib/uuid";
 
 interface ScopedEditorState {
   blocks: ScreenplayBlock[];
@@ -52,12 +53,12 @@ export const useEditorStore = create<EditorState>()(
               [scriptId]: {
                 blocks: [
                   {
-                    id: crypto.randomUUID(),
+                    id: generateId(),
                     type: "transition",
                     content: "FADE IN:",
                   },
                   {
-                    id: crypto.randomUUID(),
+                    id: generateId(),
                     type: "scene_heading",
                     content: "INT. WRITING ROOM - NIGHT",
                   },
@@ -71,7 +72,7 @@ export const useEditorStore = create<EditorState>()(
       },
 
       addBlock: (scriptId, index, content = "", type) => {
-        const id = crypto.randomUUID();
+        const id = generateId();
         set((state) => {
           const scriptState = state.scripts[scriptId];
           if (!scriptState) return state;

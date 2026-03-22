@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { generateId } from "@/lib/uuid";
 
 export interface Script {
   id: string;
@@ -11,7 +12,7 @@ export interface Script {
 
 interface ScriptsState {
   scripts: Script[];
-  addScript: (title: string) => void;
+  addScript: (title: string) => string; // Changed return type
   renameScript: (id: string, newTitle: string) => void;
   deleteScript: (id: string) => void;
   touchScript: (id: string) => void;
@@ -21,16 +22,17 @@ export const useScriptsStore = create<ScriptsState>()(
   persist(
     (set) => ({
       scripts: [],
-      addScript: (title) =>
-        set((state) => {
-          const newScript: Script = {
-            id: crypto.randomUUID(),
-            title,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          return { scripts: [newScript, ...state.scripts] };
-        }),
+      addScript: (title) => {
+        const id = generateId(); // Replaced crypto.randomUUID()
+        const newScript: Script = {
+          id,
+          title,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        set((state) => ({ scripts: [newScript, ...state.scripts] }));
+        return id; // Added return value
+      },
       renameScript: (id, newTitle) =>
         set((state) => ({
           scripts: state.scripts.map((script) =>
