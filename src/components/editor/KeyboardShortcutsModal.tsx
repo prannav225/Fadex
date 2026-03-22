@@ -18,7 +18,7 @@ interface KeyboardShortcutsModalProps {
 export function KeyboardShortcutsModal({ isOpen, onOpenChange }: KeyboardShortcutsModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="w-[96vw] sm:max-w-3xl md:max-w-4xl rounded-3xl sm:rounded-[2.5rem] border border-border/50 bg-background/80 backdrop-blur-3xl shadow-2xl p-5 sm:p-8 md:p-12 grid-cols-1!">
+      <DialogContent showCloseButton={false} className="w-[96vw] max-h-[92vh] overflow-y-auto sm:max-w-3xl md:max-w-4xl rounded-3xl sm:rounded-[2.5rem] border border-border/50 bg-background/80 backdrop-blur-3xl shadow-2xl p-5 sm:p-8 md:p-12 grid-cols-1! custom-scrollbar">
         <DialogClose className="absolute top-4 right-4 sm:top-8 sm:right-8 rounded-full p-2 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors ring-offset-background focus:ring-2 focus:ring-ring focus:outline-none z-50">
           <X className="w-5 h-5 opacity-70 hover:opacity-100 transition-opacity" />
           <span className="sr-only">Close</span>
