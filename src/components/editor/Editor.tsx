@@ -1,18 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useScriptsStore } from "@/store/scripts";
 import { useEditorStore } from "@/store/editor";
 import { EditorBlock } from "./EditorBlock";
 import { BlockType } from "@/lib/editor-types";
 import { cn } from "@/lib/utils";
-import { Target, List, Keyboard, X } from "lucide-react";
+import { X } from "lucide-react";
 import { KeyboardShortcutsModal } from "./KeyboardShortcutsModal";
+import { ExportModal } from "./ExportModal";
+import { EditorHeader } from "./EditorHeader";
+import dynamic from "next/dynamic";
+
+const PrintContainer = dynamic(
+  () => import("./PrintContainer").then((mod) => mod.PrintContainer),
+  { ssr: false }
+);
 
 interface EditorProps {
   scriptId: string;
 }
 
 export function Editor({ scriptId }: EditorProps) {
+  const { scripts: dashboardScripts } = useScriptsStore();
   const {
     scripts,
     initializeScript,
@@ -28,11 +38,21 @@ export function Editor({ scriptId }: EditorProps) {
 
   const scriptState = scripts[scriptId];
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
-  const activeBlock = scriptState?.blocks.find((b) => b.id === activeBlockId);
+  const activeBlock = scriptState?.blocks?.find((b) => b.id === activeBlockId);
+
+  // Reset active block if it no longer exists in the current script (safety for imports/deletes)
+  useEffect(() => {
+    if (scriptState?.blocks && activeBlockId) {
+      const exists = scriptState.blocks.some((b) => b.id === activeBlockId);
+      if (!exists) setActiveBlockId(null);
+    }
+  }, [scriptState?.blocks, activeBlockId]);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [isNavOpen, setIsNavOpen] = useState(true);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [isPrintReady, setIsPrintReady] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   // Detect mobile keyboard
   useEffect(() => {
@@ -171,69 +191,65 @@ export function Editor({ scriptId }: EditorProps) {
     }
   };
 
-  // Derive scene numbers & scene navigation index
-  let sceneCounter = 1;
+  // Ensure scriptState and blocks exist
+  if (!scriptState || !Array.isArray(scriptState.blocks)) {
+    return (
+      <div className="p-8 text-center bg-zinc-50 dark:bg-zinc-950 rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800">
+        <p className="text-sm font-brand uppercase tracking-widest text-zinc-400">
+          Script Not Found or Initializing...
+        </p>
+      </div>
+    );
+  }
+
+  let sceneCounter = 0;
   const scenesList: { id: string; num: number; content: string }[] = [];
 
-  const blocksWithScenes = scriptState.blocks.map((block) => {
-    let sceneNum = undefined;
-    if (block.type === "scene_heading") {
-      sceneNum = sceneCounter++;
-      scenesList.push({ id: block.id, num: sceneNum, content: block.content });
+  // Defensive mapping to handle potentially malformed imported data
+  const blocksWithScenes = scriptState.blocks.map((block, index) => {
+    if (!block || typeof block !== 'object') {
+      return { id: 'error-' + index, type: 'action' as const, content: 'Malformed block data', sceneNumber: undefined };
     }
-    return { ...block, sceneNum };
+    
+    const safeBlock = {
+      id: block.id || Math.random().toString(36).substr(2, 9),
+      type: (block.type as BlockType) || ('action' as const),
+      content: block.content || '',
+    };
+
+    if (safeBlock.type === "scene_heading") {
+      sceneCounter++;
+      const sNum = sceneCounter;
+      scenesList.push({
+        id: safeBlock.id,
+        num: sNum,
+        content: safeBlock.content,
+      });
+      return { ...safeBlock, sceneNumber: sNum };
+    }
+    return { ...safeBlock, sceneNumber: undefined };
   });
 
+  const currentScript = dashboardScripts.find((s) => s.id === scriptId);
+
   return (
-    <div className="relative min-h-[calc(100vh-8rem)]">
-      {/* Settings / Floating Utilities */}
-      <div
-        id="editor-floating-tools"
-        className="fixed bottom-24 sm:bottom-6 right-4 sm:right-6 flex flex-col gap-2 z-20 print:hidden"
-      >
-        <button
-          onClick={() => setIsNavOpen(!isNavOpen)}
-          className={cn(
-            "group relative p-4 rounded-3xl shadow-xl border transition-all duration-300 flex items-center justify-center",
-            isNavOpen
-              ? "bg-primary text-primary-foreground border-primary shadow-primary/20 scale-105"
-              : "bg-background/40 text-muted-foreground border-border/40 backdrop-blur-2xl hover:bg-primary/10 hover:text-primary hover:border-primary/30",
-          )}
-        >
-          <List className="w-5 h-5" />
-          <span className="absolute right-full mr-4 whitespace-nowrap bg-background/80 backdrop-blur-3xl text-foreground font-brand tracking-widest text-[10px] px-3 py-2 rounded-xl border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-2xl">
-            {isNavOpen ? "HIDE SCENES" : "SHOW SCENES"}
-          </span>
-        </button>
-        <button
-          onClick={() => setIsFocusMode(!isFocusMode)}
-          className={cn(
-            "group relative p-4 rounded-3xl shadow-xl border transition-all duration-300 flex items-center justify-center",
-            isFocusMode
-              ? "bg-primary text-primary-foreground border-primary shadow-primary/30 scale-105"
-              : "bg-background/40 text-muted-foreground border-border/40 backdrop-blur-2xl hover:bg-primary/10 hover:text-primary hover:border-primary/30",
-          )}
-        >
-          <Target className="w-5 h-5" />
-          <span className="absolute right-full mr-4 whitespace-nowrap bg-background/80 backdrop-blur-3xl text-foreground font-brand tracking-widest text-[10px] px-3 py-2 rounded-xl border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-2xl">
-            {isFocusMode ? "DISABLE FOCUS" : "FOCUS MODE"}
-          </span>
-        </button>
-        <button
-          onClick={() => setIsShortcutsOpen(true)}
-          className={cn(
-            "group relative p-4 rounded-3xl shadow-xl border transition-all duration-300 flex items-center justify-center",
-            isShortcutsOpen
-              ? "bg-primary text-primary-foreground border-primary shadow-primary/30 scale-105"
-              : "bg-background/40 text-muted-foreground border-border/40 backdrop-blur-2xl hover:bg-primary/10 hover:text-primary hover:border-primary/30",
-          )}
-        >
-          <Keyboard className="w-5 h-5" />
-          <span className="absolute right-full mr-4 whitespace-nowrap bg-background/80 backdrop-blur-3xl text-foreground font-brand tracking-widest text-[10px] px-3 py-2 rounded-xl border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-2xl">
-            SHORTCUTS
-          </span>
-        </button>
-      </div>
+    <div
+      className={cn(
+        "relative min-h-[calc(100vh-8rem)] transition-colors duration-500",
+        isPrintReady && "print-ready-mode",
+      )}
+    >
+      <EditorHeader
+        scriptId={scriptId}
+        isNavOpen={isNavOpen}
+        setIsNavOpen={setIsNavOpen}
+        isFocusMode={isFocusMode}
+        setIsFocusMode={setIsFocusMode}
+        isPrintReady={isPrintReady}
+        setIsPrintReady={setIsPrintReady}
+        setIsShortcutsOpen={setIsShortcutsOpen}
+        setIsExportOpen={setIsExportOpen}
+      />
 
       {/* Backdrop Overlay for Mobile */}
       <div
@@ -245,7 +261,7 @@ export function Editor({ scriptId }: EditorProps) {
       />
 
       {/* Main Structural Content - Split from Flex to fix Chrome positioning */}
-      <div className="flex flex-col lg:flex-row items-start justify-center pt-20 lg:pt-32 px-4 lg:px-8">
+      <div className="flex flex-col lg:flex-row items-start justify-center pt-24 lg:pt-32 px-4 lg:px-8">
         <div
           id="scene-navigator"
           className={cn(
@@ -347,7 +363,7 @@ export function Editor({ scriptId }: EditorProps) {
                 key={block.id}
                 block={block}
                 allBlocks={scriptState.blocks}
-                sceneNumber={block.sceneNum}
+                sceneNumber={block.sceneNumber}
                 isFocusMode={isFocusMode}
                 index={index}
                 isActive={block.id === activeBlockId}
@@ -367,6 +383,14 @@ export function Editor({ scriptId }: EditorProps) {
       <KeyboardShortcutsModal
         isOpen={isShortcutsOpen}
         onOpenChange={setIsShortcutsOpen}
+      />
+
+      {/* Export / Import Modal */}
+      <ExportModal
+        isOpen={isExportOpen}
+        onOpenChange={setIsExportOpen}
+        scriptId={scriptId}
+        scriptTitle={currentScript?.title}
       />
 
       {/* Mobile Formatting Dock - Bold brutalist editorial design */}
@@ -419,6 +443,9 @@ export function Editor({ scriptId }: EditorProps) {
           ))}
         </div>
       </div>
+
+      {/* Hidden Print-Specific Container */}
+      {scriptState.blocks && <PrintContainer blocks={scriptState.blocks} />}
     </div>
   );
 }

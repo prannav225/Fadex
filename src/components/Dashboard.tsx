@@ -1,15 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import { Plus, MoreVertical, FileText, Trash, Edit2 } from "lucide-react";
+import {
+  Plus,
+  MoreVertical,
+  FileText,
+  Trash,
+  Edit2,
+  FileUp,
+  Search,
+  LayoutGrid,
+  List as ListIcon,
+  Sparkles,
+  ChevronRight,
+  Clock,
+} from "lucide-react";
+import { parseFountain } from "@/lib/fountain";
 
 import { useScriptsStore } from "@/store/scripts";
 import { useEditorStore } from "@/store/editor";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +43,8 @@ import {
 export function Dashboard() {
   const router = useRouter();
   const { scripts, addScript, renameScript, deleteScript } = useScriptsStore();
-  const { deleteScriptData } = useEditorStore();
+  const { deleteScriptData, setScriptBlocks } = useEditorStore();
+
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -38,13 +54,30 @@ export function Dashboard() {
     id: string;
     title: string;
   } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const filteredScripts = scripts
+    .filter((s) => s.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort(
+      (a, b) =>
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+    );
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTitle.trim()) {
-      addScript(newTitle.trim());
+      const id = addScript(newTitle.trim());
       setNewTitle("");
       setIsCreateOpen(false);
+      router.push(`/editor/${id}`);
     }
   };
 
@@ -78,229 +111,489 @@ export function Dashboard() {
     }
   };
 
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (text) {
+        const title = file.name.replace(/\.fountain$/i, "");
+        const blocks = parseFountain(text);
+        const newId = addScript(title);
+        setScriptBlocks(newId, blocks);
+        router.push(`/editor/${newId}`);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
-    <div className="min-h-screen bg-transparent p-4 lg:p-8 transition-all duration-500">
-      <div className="mx-auto max-w-6xl">
-        <header className="flex flex-col sm:flex-row items-center justify-between mb-8 lg:mb-12 gap-6 sm:gap-0">
-          <div className="relative group text-center sm:text-left">
-            <h1 className="font-brand uppercase tracking-[0.2em] text-4xl lg:text-5xl font-extrabold text-foreground drop-shadow-[0_0_15px_rgba(19,111,99,0.1)]">
+    <div className="min-h-screen bg-[#FDFCF9] text-[#191919] relative selection:bg-[#136F63]/10">
+      {/* Dynamic Background Elements */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div
+          className="absolute top-[-15%] right-[-10%] w-[60%] h-[60%] bg-[#136F63]/5 rounded-full blur-[140px] animate-pulse"
+          style={{ animationDuration: "8s" }}
+        />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#D4C3A3]/20 rounded-full blur-[120px]" />
+      </div>
+
+      {/* Modern Sticky Nav */}
+      <nav
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-6 lg:px-12",
+          isScrolled
+            ? "py-4 bg-white/70 backdrop-blur-xl border-b border-black/10"
+            : "py-8 bg-transparent",
+        )}
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-10">
+            <h1
+              onClick={() => router.push("/")}
+              className="font-brand uppercase tracking-[0.2em] text-2xl font-black cursor-pointer group"
+            >
               FADEX
+              <span className="text-[#136F63] group-hover:animate-pulse">
+                .
+              </span>
             </h1>
-            <p className="text-muted-foreground mt-2 font-display text-xs lg:text-sm tracking-wide">
-              Manage your screenplays and projects.
-            </p>
           </div>
-          <Button
-            onClick={() => setIsCreateOpen(true)}
-            className="w-full sm:w-auto gap-2 bg-[#136F63] text-[#F3EFE0] hover:bg-[#136F63]/90 hover:scale-[1.02] active:scale-[0.98] transition-all rounded-full px-6 lg:px-8 py-5 lg:py-6 shadow-lg shadow-[#136F63]/20 font-brand tracking-widest uppercase text-xs lg:text-sm"
-          >
-            <Plus className="w-4 h-4" />
-            New Script
-          </Button>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center bg-black/5 rounded-full px-4 py-2 border border-black/15 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#136F63]/10 focus-within:border-[#136F63]/30 transition-all w-64 lg:w-96 group">
+              <Search className="w-4 h-4 text-black/30 group-focus-within:text-[#136F63] transition-colors" />
+              <input
+                type="text"
+                placeholder="Search your scripts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent border-none focus:ring-0 text-sm w-full px-3 placeholder:text-black/30"
+              />
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="relative z-10 pt-32 lg:pt-44 pb-20 px-6 lg:px-12 max-w-7xl mx-auto flex-1">
+        <header className="mb-12 lg:mb-16">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-3 py-1 bg-[#136F63]/10 text-[#136F63] rounded-full text-[9px] font-brand uppercase tracking-widest font-black">
+                  Studio Dashboard
+                </span>
+                <div className="h-px w-8 bg-black/10" />
+                <span className="text-[10px] text-black/40 font-brand uppercase tracking-widest">
+                  {scripts.length} Project{scripts.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <h2 className="font-display font-black text-4xl lg:text-5xl tracking-tight leading-none mb-6">
+                Your Cinematic <br />
+                <span className="text-[#136F63] italic">Collection.</span>
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="bg-white/50 backdrop-blur-sm border border-black/10 rounded-full p-2 flex gap-1 h-14 items-center">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={cn(
+                    "p-3 rounded-full transition-all cursor-pointer h-10 w-10 flex items-center justify-center",
+                    viewMode === "grid"
+                      ? "bg-[#136F63] text-white shadow-lg shadow-[#136F63]/20"
+                      : "text-black/40 hover:bg-black/5",
+                  )}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={cn(
+                    "p-3 rounded-full transition-all cursor-pointer h-10 w-10 flex items-center justify-center",
+                    viewMode === "list"
+                      ? "bg-[#136F63] text-white shadow-lg shadow-[#136F63]/20"
+                      : "text-black/40 hover:bg-black/5",
+                  )}
+                >
+                  <ListIcon className="w-4 h-4" />
+                </button>
+              </div>
+
+              <input
+                type="file"
+                id="fountain-import-dash"
+                accept=".fountain"
+                onChange={handleImport}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                onClick={() =>
+                  document.getElementById("fountain-import-dash")?.click()
+                }
+                className="rounded-full border-black/15 bg-white px-8 h-14 tracking-[0.2em] font-brand text-[10px] uppercase hover:bg-[#136F63] hover:text-white hover:border-[#136F63] transition-all cursor-pointer shadow-sm active:scale-95 flex items-center justify-center gap-2.5"
+              >
+                <FileUp className="w-4 h-4" />
+                Import
+              </Button>
+              <Button
+                onClick={() => setIsCreateOpen(true)}
+                className="rounded-full bg-[#136F63] hover:bg-[#136F63]/90 text-white px-10 h-14 tracking-[0.2em] font-brand text-[10px] uppercase shadow-2xl shadow-[#136F63]/30 cursor-pointer active:scale-95 flex items-center justify-center gap-2.5"
+              >
+                <Plus className="w-4 h-4" />
+                New Script
+              </Button>
+            </div>
+          </div>
         </header>
 
-        {scripts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 lg:p-20 text-center border border-border/50 rounded-[2rem] lg:rounded-[3rem] bg-white/40 backdrop-blur-xl shadow-sm">
-            <div className="w-16 h-16 lg:w-20 lg:h-20 mb-6 rounded-3xl bg-[#136F63]/5 flex items-center justify-center">
-              <FileText className="w-8 h-8 lg:w-10 lg:h-10 text-[#136F63]/40" />
+        {filteredScripts.length === 0 ? (
+          <div className="group relative flex flex-col items-center justify-center py-32 lg:py-52 text-center rounded-[3rem] bg-white border border-black/5 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.03)] overflow-hidden">
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 bg-[radial-gradient(circle_at_50%_120%,rgba(19,111,99,0.03),transparent)]" />
+
+            <div className="w-24 h-24 mb-10 relative">
+              <div className="absolute inset-0 bg-[#136F63]/5 rounded-[2.5rem] border border-black/10 rotate-12 group-hover:rotate-45 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-[#136F63]/10 rounded-[2.5rem] border border-black/10 -rotate-6 group-hover:rotate-12 transition-transform duration-500" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <FileText className="w-10 h-10 text-[#136F63]/40 group-hover:text-[#136F63] transition-colors" />
+              </div>
             </div>
-            <h2 className="text-xl lg:text-2xl font-brand uppercase tracking-widest text-[#191919] mb-3">
-              No Scripts
-            </h2>
-            <p className="text-muted-foreground mb-8 lg:mb-10 max-w-xs lg:max-w-sm text-xs lg:text-sm font-display tracking-tight leading-relaxed">
-              Your cinematic workspace is empty. Start a new journey by creating
-              your first screenplay.
+
+            <h3 className="text-2xl lg:text-3xl font-display font-black tracking-tight mb-4">
+              The silence is{" "}
+              <span className="text-[#136F63] italic font-serif">waiting.</span>
+            </h3>
+            <p className="text-black/60 text-sm max-w-xs mx-auto mb-10 leading-relaxed font-medium">
+              Your creative repository is empty. Create a script or import a
+              Fountain file to begin.
             </p>
+
             <Button
               onClick={() => setIsCreateOpen(true)}
-              className="w-full sm:w-auto bg-[#136F63] text-[#F3EFE0] rounded-full px-8 lg:px-12 py-5 lg:py-7 h-auto text-xs lg:text-sm font-brand tracking-[0.2em] uppercase hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-[#136F63]/10 transition-all font-bold"
+              className="rounded-full bg-[#191919] hover:bg-[#136F63] text-white px-12 py-7 h-auto tracking-widest font-brand text-[11px] uppercase group transition-all cursor-pointer shadow-xl hover:shadow-[#136F63]/20"
             >
-              Start Writing
+              Initialize Project
+              <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {scripts.map((script) => (
-              <Card
-                key={script.id}
-                className="group relative overflow-hidden rounded-[2rem] lg:rounded-[2.5rem] bg-card/40 backdrop-blur-3xl border border-border/50 shadow-sm hover:shadow-[0_20px_60px_-15px_rgba(19,111,99,0.1)] hover:-translate-y-1.5 hover:border-[#136F63]/40 transition-all duration-500 cursor-pointer"
-                onClick={() => router.push(`/editor/${script.id}`)}
-              >
-                <div className="aspect-16/10 sm:aspect-4/3 bg-background/50 flex items-center justify-center relative border-b border-border/10 overflow-hidden">
-                  <div className="absolute inset-0 opacity-5 flex flex-col gap-2 p-4">
-                    <div className="h-1 w-2/3 bg-[#191919] rounded-full" />
-                    <div className="h-1 w-full bg-[#191919] rounded-full" />
-                    <div className="h-1 w-1/2 bg-[#191919] rounded-full ml-auto" />
+          <div
+            className={cn(
+              viewMode === "grid"
+                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8"
+                : "flex flex-col gap-3",
+            )}
+          >
+            {filteredScripts.map((script, i) =>
+              viewMode === "grid" ? (
+                <Card
+                  key={script.id}
+                  onClick={() => router.push(`/editor/${script.id}`)}
+                  className="group relative flex flex-col rounded-[2.5rem] bg-white border border-black/15 hover:border-[#136F63]/40 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_-10px_rgba(19,111,99,0.1)] transition-all duration-500 hover:-translate-y-1 overflow-hidden cursor-pointer animate-in fade-in slide-in-from-bottom-4"
+                  style={{ animationDelay: `${i * 50}ms` }}
+                >
+                  <div className="aspect-4/3 bg-[#F9F9F7] relative flex items-center justify-center group-hover:bg-[#136F63]/5 transition-colors overflow-hidden border-b border-black/5">
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity">
+                      <div className="absolute top-10 left-10 right-10 flex flex-col gap-3">
+                        <div className="h-1.5 w-full bg-black rounded-full" />
+                        <div className="h-1.5 w-2/3 bg-black rounded-full" />
+                        <div className="h-1.5 w-5/6 bg-black rounded-full" />
+                      </div>
+                    </div>
+
+                    <div className="relative z-10 w-16 h-16 bg-white rounded-3xl shadow-xl shadow-black/5 flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-2 transition-all duration-500">
+                      <FileText className="w-8 h-8 text-[#136F63]/40 group-hover:text-[#136F63]" />
+                    </div>
+
+                    <div
+                      className="absolute top-5 right-5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="w-10 h-10 rounded-full bg-white text-[#191919] border-black/10 hover:bg-[#136F63] hover:text-white hover:border-[#136F63] transition-all shadow-sm cursor-pointer z-20"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="rounded-2xl border-black/10 p-1.5 shadow-2xl"
+                        >
+                          <DropdownMenuItem
+                            onClick={() =>
+                              openRenameDialog(script.id, script.title)
+                            }
+                            className="rounded-xl gap-3 px-4 py-3 cursor-pointer focus:bg-[#136F63] focus:text-white group/item"
+                          >
+                            <Edit2 className="w-4 h-4 text-black/50 group-focus/item:text-white transition-colors" />
+                            Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              openDeleteDialog(script.id, script.title)
+                            }
+                            className="rounded-xl gap-3 px-4 py-3 cursor-pointer text-red-600 focus:bg-red-500 focus:text-white group/del transition-colors"
+                          >
+                            <Trash className="w-4 h-4 text-red-500 group-focus/del:text-white transition-colors" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                  <FileText className="w-8 h-8 lg:w-10 lg:h-10 text-[#136F63]/20 transition-transform group-hover:scale-110 group-hover:text-[#136F63]/40 z-10" />
-                  <div
-                    className="absolute top-3 right-3 lg:top-4 lg:right-4"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 lg:w-9 lg:h-9 text-[#191919] rounded-full bg-background/40 hover:bg-white backdrop-blur-sm opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all duration-300"
+
+                  <div className="p-8 pb-10">
+                    <h4 className="font-display font-black text-lg text-black mb-2 truncate group-hover:text-[#136F63] transition-colors">
+                      {script.title}
+                    </h4>
+                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-black/3">
+                      <div className="flex items-center gap-2 text-[9px] text-black/40 font-brand uppercase tracking-widest font-bold whitespace-nowrap">
+                        <Clock className="w-3.5 h-3.5 text-[#136F63]" />
+                        EDITED{" "}
+                        {format(
+                          new Date(script.updated_at),
+                          "MMM d, yyyy · h:mm a",
+                        )}
+                      </div>
+                      <div className="h-1.5 w-1.5 rounded-full bg-black/10 group-hover:bg-[#136F63] group-hover:shadow-[0_0_8px_rgba(19,111,99,0.4)] transition-all duration-500" />
+                    </div>
+                  </div>
+                </Card>
+              ) : (
+                <div
+                  key={script.id}
+                  onClick={() => router.push(`/editor/${script.id}`)}
+                  className="group flex items-center justify-between p-5 bg-white border border-black/5 hover:border-[#136F63]/20 rounded-3xl hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.05)] transition-all cursor-pointer animate-in fade-in slide-in-from-left-2"
+                  style={{ animationDelay: `${i * 30}ms` }}
+                >
+                  <div className="flex items-center gap-6 min-w-0">
+                    <div className="w-12 h-12 bg-[#F9F9F7] group-hover:bg-[#136F63]/5 rounded-2xl flex items-center justify-center transition-colors">
+                      <FileText className="w-6 h-6 text-black/20 group-hover:text-[#136F63]/60" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-display font-black text-base text-black truncate group-hover:text-[#136F63] transition-colors">
+                        {script.title}
+                      </h4>
+                      <p className="text-[9px] text-black/40 font-brand uppercase tracking-widest mt-0.5 font-bold">
+                        EDITED{" "}
+                        {format(
+                          new Date(script.updated_at),
+                          "MMMM d, yyyy · h:mm a",
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6">
+                    <div className="hidden md:flex flex-col items-end">
+                      <span className="text-[10px] text-[#136F63] font-brand uppercase tracking-tighter font-black opacity-0 group-hover:opacity-100 transition-opacity">
+                        Ready to edit
+                      </span>
+                    </div>
+
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-10 h-10 rounded-full hover:bg-black/5"
+                          >
+                            <MoreVertical className="w-4 h-4 text-black/30" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="rounded-2xl border-black/5 p-1.5 shadow-2xl"
                         >
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="rounded-2xl border-border/50 backdrop-blur-xl"
-                      >
-                        <DropdownMenuItem
-                          onClick={() =>
-                            openRenameDialog(script.id, script.title)
-                          }
-                          className="rounded-xl px-4 py-2 text-sm"
-                        >
-                          <Edit2 className="w-4 h-4 mr-2" />
-                          Rename
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/50 rounded-xl px-4 py-2 text-sm"
-                          onClick={() =>
-                            openDeleteDialog(script.id, script.title)
-                          }
-                        >
-                          <Trash className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              openRenameDialog(script.id, script.title)
+                            }
+                            className="rounded-xl gap-3 px-4 py-3 cursor-pointer focus:bg-[#136F63] focus:text-white group/item"
+                          >
+                            <Edit2 className="w-4 h-4 text-black/30 group-focus/item:text-white" />
+                            Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              openDeleteDialog(script.id, script.title)
+                            }
+                            className="rounded-xl gap-3 px-4 py-3 cursor-pointer text-red-600 focus:bg-red-500 focus:text-white group/del"
+                          >
+                            <Trash className="w-4 h-4 text-red-400 group-focus/del:text-white" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </div>
-                <div className="p-6 lg:p-8">
-                  <h3 className="font-display font-bold text-base lg:text-lg text-[#191919] truncate pb-1 group-hover:text-[#136F63] transition-colors leading-tight">
-                    {script.title}
-                  </h3>
-                  <p className="text-[9px] lg:text-[10px] font-brand tracking-widest text-muted-foreground uppercase opacity-60 mt-1">
-                    Edited {format(new Date(script.updated_at), "MMM d, yyyy")}
-                  </p>
-                </div>
-              </Card>
-            ))}
+              ),
+            )}
           </div>
         )}
 
-        {/* Create Dialog */}
+        {/* Dialogs and Modals */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Script</DialogTitle>
-              <DialogDescription className="sr-only">
-                Enter a title for your new script.
+          <DialogContent className="rounded-[3rem] p-10 lg:p-14 border-none shadow-[0_50px_100px_-50px_rgba(0,0,0,0.5)] bg-[#F3F1EA] max-w-xl">
+            <DialogHeader className="items-center text-center relative">
+              <div className="w-20 h-20 bg-[#136F63]/10 rounded-full flex items-center justify-center mb-8">
+                <Sparkles className="w-10 h-10 text-[#136F63]" />
+              </div>
+              <DialogTitle className="text-3xl lg:text-4xl font-display font-black tracking-tight mb-2">
+                New{" "}
+                <span className="text-[#136F63] italic font-serif">
+                  Journey.
+                </span>
+              </DialogTitle>
+              <DialogDescription className="text-black/50 font-medium">
+                Give your cinematic project a name to get started.
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleCreateSubmit}>
-              <div className="grid gap-4 py-4">
-                <Input
-                  id="title"
-                  placeholder="Enter script title..."
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  autoFocus
-                />
-              </div>
-              <DialogFooter>
+            <form onSubmit={handleCreateSubmit} className="mt-6">
+              <Input
+                placeholder="The Greatest Story Never Told..."
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                className="h-16 rounded-2xl bg-black/5 border-none px-6 text-lg focus-visible:ring-2 focus-visible:ring-[#136F63]/10 focus-visible:bg-white transition-all font-medium placeholder:text-black/20"
+                autoFocus
+              />
+              <DialogFooter className="mt-10 sm:justify-center gap-4">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsCreateOpen(false)}
+                  className="rounded-full px-10 h-14 font-brand text-[10px] uppercase tracking-widest text-[#191919] border-black/15 bg-white hover:bg-black hover:text-white transition-all duration-300"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={!newTitle.trim()}
-                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                  className="rounded-full bg-[#136F63] hover:bg-[#191919] text-[#F3EFE0] px-12 h-16 font-brand text-sm tracking-[0.2em] font-black shadow-2xl shadow-[#136F63]/30 transition-all hover:scale-[1.05] active:scale-[0.98] cursor-pointer z-9999"
                 >
-                  Create
+                  Begin Writing
                 </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
 
-        {/* Rename Dialog */}
         <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Rename Script</DialogTitle>
-              <DialogDescription className="sr-only">
-                Enter a new title for your script.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleRenameSubmit}>
-              <div className="grid gap-4 py-4">
-                <Input
-                  id="rename-title"
-                  placeholder="Enter new title..."
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  autoFocus
-                />
+          <DialogContent className="rounded-[3rem] p-10 lg:p-14 border-none shadow-2xl">
+            <DialogHeader className="items-center text-center">
+              <div className="w-20 h-20 bg-[#136F63]/5 rounded-[2.5rem] flex items-center justify-center mb-8">
+                <Edit2 className="w-8 h-8 text-[#136F63]" />
               </div>
-              <DialogFooter>
+              <DialogTitle className="text-3xl font-display font-black tracking-tight mb-2">
+                Update <span className="text-[#136F63] italic">Identity.</span>
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleRenameSubmit} className="mt-4">
+              <Input
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                className="h-16 rounded-2xl bg-black/5 border-none px-6 text-lg focus-visible:ring-0 focus-visible:bg-black/10 transition-all font-medium"
+                autoFocus
+              />
+              <DialogFooter className="mt-10 sm:justify-center gap-4">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsRenameOpen(false)}
+                  className="rounded-full px-10 h-14 font-brand text-[10px] uppercase tracking-widest text-[#191919] border-black/15 bg-white hover:bg-black hover:text-white transition-all duration-300"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={!newTitle.trim()}
-                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                  className="rounded-full bg-[#136F63] hover:bg-[#136F63]/90 text-white px-12 h-14 font-brand text-[10px] uppercase tracking-widest shadow-xl shadow-[#136F63]/20 transition-all"
                 >
-                  Save
+                  Rename Script
                 </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
-        {/* Delete Confirmation Dialog */}
+
         <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-          <DialogContent className="max-w-[400px] rounded-[2rem] border-none shadow-2xl">
-            <DialogHeader className="flex flex-col items-center text-center pt-4">
-              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
-                <Trash className="w-8 h-8 text-red-500" />
+          <DialogContent className="rounded-[3rem] border-none shadow-2xl p-10">
+            <DialogHeader className="items-center text-center">
+              <div className="w-20 h-20 bg-red-50 rounded-[2.5rem] flex items-center justify-center mb-6">
+                <Trash className="w-10 h-10 text-red-500" />
               </div>
-              <DialogTitle className="text-xl font-brand uppercase tracking-widest text-[#191919]">
-                Move to Trash?
+              <DialogTitle className="text-3xl font-display font-black tracking-tight">
+                Move to <span className="text-red-500 italic">Trash?</span>
               </DialogTitle>
-              <DialogDescription className="text-sm font-display text-muted-foreground mt-2 px-4 leading-relaxed">
+              <DialogDescription className="text-black/40 text-sm mt-4 px-6 leading-relaxed font-medium">
                 Are you sure you want to delete{" "}
-                <span className="text-[#191919] font-bold italic">
+                <span className="text-black font-bold">
                   &quot;{scriptToDelete?.title}&quot;
                 </span>
                 ? This action is permanent and cannot be undone.
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="sm:justify-center gap-2 mt-4 pb-4">
+            <DialogFooter className="mt-10 sm:justify-center gap-4">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 onClick={() => setIsDeleteOpen(false)}
-                className="rounded-full px-8 font-brand uppercase tracking-widest text-xs hover:bg-zinc-100"
+                className="rounded-full px-10 h-14 font-brand text-[10px] uppercase tracking-widest text-[#191919] border-black/15 bg-white hover:bg-black hover:text-white transition-all duration-300"
               >
-                Cancel
+                Keep Script
               </Button>
               <Button
                 type="button"
                 onClick={handleDeleteConfirm}
-                className="bg-red-600 text-white hover:bg-red-700 rounded-full px-8 font-brand uppercase tracking-widest text-xs shadow-lg shadow-red-200"
+                className="rounded-full bg-red-600 hover:bg-red-700 text-white px-12 h-14 font-brand text-[10px] uppercase tracking-widest shadow-xl shadow-red-200 transition-all"
               >
                 Delete Forever
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      </main>
+
+      <footer className="relative z-10 border-t border-black/5 bg-white/30 backdrop-blur-md py-12 px-6 lg:px-12 mt-20">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-8">
+          <div className="flex flex-col items-center sm:items-start gap-2">
+            <h1 className="font-brand uppercase tracking-[0.2em] text-xl font-black">
+              FADEX<span className="text-[#136F63]">.</span>
+            </h1>
+            <p className="text-[9px] font-brand uppercase tracking-widest text-black/30">
+              Created with structural precision.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-8">
+            {["Privacy", "Terms", "Support", "Fountain Format"].map((item) => (
+              <button
+                key={item}
+                className="text-[10px] font-brand uppercase tracking-widest text-black/30 hover:text-black transition-colors"
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+
+          <p className="text-[10px] font-brand uppercase tracking-widest text-black/20">
+            © 2026 FADEX STUDIO
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

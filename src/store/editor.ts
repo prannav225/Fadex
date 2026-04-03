@@ -31,6 +31,7 @@ interface EditorState {
   undo: (scriptId: string) => void;
   redo: (scriptId: string) => void;
   deleteScriptData: (scriptId: string) => void;
+  setScriptBlocks: (scriptId: string, blocks: ScreenplayBlock[]) => void;
 }
 
 const pushHistory = (state: ScopedEditorState) => {
@@ -46,7 +47,8 @@ export const useEditorStore = create<EditorState>()(
 
       initializeScript: (scriptId) => {
         const { scripts } = get();
-        if (!scripts[scriptId]) {
+        // Only initialize if there is truly no data for this script to prevent overwriting imports
+        if (!scripts[scriptId] || !scripts[scriptId].blocks || scripts[scriptId].blocks.length === 0) {
           set({
             scripts: {
               ...scripts,
@@ -260,6 +262,22 @@ export const useEditorStore = create<EditorState>()(
           const newScripts = { ...state.scripts };
           delete newScripts[scriptId];
           return { scripts: newScripts };
+        }),
+
+      setScriptBlocks: (scriptId: string, blocks: ScreenplayBlock[]) =>
+        set((state) => {
+          const scriptState = state.scripts[scriptId];
+          
+          return {
+            scripts: {
+              ...state.scripts,
+              [scriptId]: {
+                blocks,
+                past: scriptState?.past || [],
+                future: scriptState?.future || [],
+              },
+            },
+          };
         }),
     }),
     {

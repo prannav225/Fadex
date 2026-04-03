@@ -2,14 +2,11 @@
 
 import React from "react";
 import { ArrowRight, Box, CloudOff, Sparkles } from "lucide-react";
-import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
 import { Badge } from "./ui/badge";
 
-interface LandingPageProps {
-  onStart: () => void;
-}
-
-export function LandingPage({ onStart }: LandingPageProps) {
+export function LandingPage() {
+  const router = useRouter();
   return (
     <div className="min-h-screen w-full bg-[#F3EFE0] text-[#191919] font-sans selection:bg-[#136F63]/20 overflow-x-hidden flex flex-col relative transition-all duration-500">
       {/* Decorative Background Elements */}
@@ -63,13 +60,13 @@ export function LandingPage({ onStart }: LandingPageProps) {
           </p>
 
           <div className="pt-4 lg:pt-8 flex flex-col items-center gap-5 lg:gap-6 w-full px-6 lg:px-0">
-            <Button
-              onClick={onStart}
-              className="group h-14 lg:h-16 w-full sm:w-lg px-10 lg:px-12 rounded-full bg-[#136F63] text-[#F3EFE0] text-sm font-brand uppercase tracking-[0.2em] shadow-[0_20px_50px_-10px_rgba(19,111,99,0.3)] hover:scale-[1.05] active:scale-[0.98] transition-all duration-500 hover:shadow-[0_25px_60px_-10px_rgba(19,111,99,0.4)] cursor-pointer"
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="relative z-[9999] pointer-events-auto group inline-flex items-center justify-center h-14 lg:h-16 w-full sm:w-[400px] px-10 lg:px-12 rounded-full bg-[#136F63] text-[#F3EFE0] text-sm font-brand uppercase tracking-[0.2em] shadow-[0_20px_50px_-10px_rgba(19,111,99,0.3)] hover:scale-[1.05] active:scale-[0.98] transition-all duration-500 hover:shadow-[0_25px_60px_-10px_rgba(19,111,99,0.4)] cursor-pointer border-none"
             >
               Begin Writing
               <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-2 transition-transform duration-500" />
-            </Button>
+            </button>
             <p className="text-[9px] lg:text-[10px] font-brand uppercase tracking-widest text-[#5e5e5b]/60">
               Instant Access • Free Forever
             </p>

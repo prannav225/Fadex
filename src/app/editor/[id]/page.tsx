@@ -1,13 +1,10 @@
 "use client";
 
 import { use, useEffect, useState, useRef } from "react";
-import Link from "next/link";
-import { ArrowLeft, Save, CheckCircle2, FileDown } from "lucide-react";
 
 import { useScriptsStore } from "@/store/scripts";
 import { useEditorStore } from "@/store/editor";
 import { Editor } from "@/components/editor/Editor";
-import { Button } from "@/components/ui/button";
 
 interface EditorPageProps {
   params: Promise<{ id: string }>;
@@ -17,50 +14,14 @@ export default function EditorPage({ params }: EditorPageProps) {
   // Extract params in Next.js 15+ App Router
   const { id } = use(params);
 
-  // We should ideally fetch the script title here. Since we're using Zustand,
-  // we do this securely client-side. We can create a small header wrapper.
-
   return (
     <div className="bg-background min-h-screen font-sans flex flex-col print:bg-white print:text-black">
-      <header className="fixed top-2 sm:top-4 lg:top-8 left-1/2 -translate-x-1/2 w-[98%] sm:w-[95%] lg:w-[90%] max-w-[900px] p-1.5 sm:p-2 lg:p-3 rounded-xl sm:rounded-2xl lg:rounded-[2rem] bg-background/40 backdrop-blur-3xl border border-gray-400/30 shadow-[0_8px_32px_rgba(0,0,0,0.08)] flex items-center justify-between z-50 print:hidden transition-all duration-500 hover:shadow-[0_20px_60px_rgba(19,111,99,0.08)]">
-        <div className="flex items-center gap-1 lg:gap-2 pl-1 lg:pl-2 min-w-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            asChild
-            className="rounded-xl lg:rounded-2xl hover:bg-primary/10 hover:text-primary transition-all shrink-0"
-          >
-            <Link href="/">
-              <ArrowLeft className="w-4 h-4 lg:w-5 lg:h-5" />
-            </Link>
-          </Button>
-          <div className="h-5 lg:h-6 w-px bg-border mx-1 shrink-0" />
-          <span className="font-brand uppercase tracking-[0.4em] text-[13px] sm:text-sm lg:text-base font-black mr-4 drop-shadow-sm text-[#136f63]">
-            FADEX
-          </span>
-          <div className="min-w-0 flex-1">
-            <ScriptTitle id={id} />
-          </div>
-        </div>
-        <div className="flex items-center gap-2 lg:gap-4 pr-1 lg:pr-2 shrink-0">
-          <div className="hidden sm:block">
-            <AutoSaveIndicator scriptId={id} />
-          </div>
-          <Button
-            variant="default"
-            size="sm"
-            className="gap-2 bg-primary text-primary-foreground rounded-xl lg:rounded-2xl px-3 lg:px-5 py-1.5 lg:py-2 text-xs lg:text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/20"
-            onClick={() => window.print()}
-          >
-            <FileDown className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-            <span className="inline">Export</span>
-          </Button>
-        </div>
-      </header>
-
       <main className="flex-1 w-full pb-12 print:p-0 print:bg-white print:overflow-visible my-print-container">
         <Editor scriptId={id} />
       </main>
+      <div className="fixed bottom-4 left-4 z-50 pointer-events-none">
+        <AutoSaveIndicator scriptId={id} />
+      </div>
     </div>
   );
 }
@@ -118,17 +79,4 @@ function AutoSaveIndicator({ scriptId }: { scriptId: string }) {
   );
 }
 
-function ScriptTitle({ id }: { id: string }) {
-  const { scripts } = useScriptsStore();
-  const script = scripts.find((s) => s.id === id);
-
-  if (!script) {
-    return <span className="text-zinc-500 font-medium">Unknown Script</span>;
-  }
-
-  return (
-    <span className="text-zinc-900 dark:text-zinc-100 font-semibold text-xs sm:text-sm lg:text-base truncate block max-w-[120px] sm:max-w-none">
-      {script.title}
-    </span>
-  );
-}
+import { Save, CheckCircle2 } from "lucide-react";

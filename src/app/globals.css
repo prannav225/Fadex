@@ -68,19 +68,19 @@
   --border: #dcd8c9;
   --input: #dcd8c9;
   --ring: rgba(19, 111, 99, 0.4);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --chart-1: #e11d48;
+  --chart-2: #3b82f6;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #6366f1;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #171717;
+  --sidebar-primary: #171717;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #a3a3a3;
 }
 
 .dark {
@@ -102,19 +102,19 @@
   --border: #262626;
   --input: #262626;
   --ring: rgba(19, 111, 99, 0.4);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --chart-1: #3b82f6;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #6366f1;
+  --chart-5: #e11d48;
+  --sidebar: #171717;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #525252;
 }
 
 @layer base {
@@ -129,96 +129,126 @@
     background-attachment: fixed;
     background-color: var(--background);
   }
+  button, [role="button"], a {
+    cursor: pointer !important;
+  }
 }
 
 @media print {
   @page {
-    margin: 1in;
+    margin: 1in !important; /* Standard screenplay 1" margins */
     size: letter;
   }
-  body {
+
+  /* Reset layout for print */
+  html, body {
     background: white !important;
-    background-image: none !important;
+    color: black !important;
+    width: 8.5in !important;
+    height: 11in !important;
     margin: 0 !important;
     padding: 0 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    font-family: inherit;
+    overflow: visible !important;
   }
 
-  /* Definitive Hide UI elements */
-  header,
-  #scene-navigator,
-  #editor-header,
-  #editor-floating-tools,
-  .fixed,
-  [class*="print:hidden"],
-  button {
-    display: none !important;
+  /* Step 4 & 5 Fix: The 'Surgical Visibility' pattern */
+  /* Hide all elements by default during print */
+  body * {
     visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
   }
 
-  /* Preserve script layout but remove screen-only sheet effects */
-  #script-editor-canvas {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
+  /* Expose only the dedicated print container and its contents */
+  #fadex-print-container,
+  #fadex-print-container * {
+    visibility: visible !important;
+  }
+
+  /* Position the print container at the top of the viewport */
+  #fadex-print-container {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 9999 !important;
+    display: block !important;
+    width: 6.5in !important; /* 8.5in - 2in margin */
     margin: 0 !important;
-    width: 6.5in !important; /* Standard writing area width */
-    max-width: none !important;
+    padding: 0 !important;
+    background: white !important;
+    color: black !important;
+    font-family:
+      var(--font-courier-prime), "Courier Prime", "Courier New", Courier,
+      monospace !important;
+    font-size: 12pt !important;
+    line-height: 1.5 !important;
   }
 
-  .editor-page-strip-label {
+  /* Step 6 Fix: Clean up browser elements & Modals redundant hiding */
+  header, footer, nav, [class*="modal"], [class*="overlay"], [class*="dialog"], .fixed {
     display: none !important;
   }
 
-  /* Force blocks to be vertical and clean */
-  [id^="block-"] {
+  /* Pagination Logic */
+  .print-block {
     display: block !important;
     width: 100% !important;
-    margin-bottom: 0.1in !important;
-    position: relative !important;
-    clear: both !important;
-    page-break-inside: auto !important;
+    page-break-inside: avoid !important;
+    margin-bottom: 0 !important;
   }
 
-  /* Indents from 1" Margin */
-  .print-heading,
+  /* Specific Indents (based on 1" page margin) */
+  .print-scene_heading {
+    text-transform: uppercase !important;
+    font-weight: bold !important; /* Professional standard headings are bold */
+    margin-top: 18pt !important;
+    margin-bottom: 6pt !important;
+  }
+
   .print-action {
-    margin-left: 0 !important;
-    width: 100% !important;
+    margin-top: 6pt !important;
+    margin-bottom: 6pt !important;
   }
 
+  /* Character (Centered ~3.5in from edge -> 2.5in from 1" margin) */
   .print-character {
-    margin-left: 2.2in !important;
-    width: auto !important;
-  }
-
-  .print-dialogue {
-    margin-left: 1in !important;
+    margin-left: 2.5in !important;
     width: 3.5in !important;
+    margin-top: 12pt !important;
+    text-transform: uppercase !important;
+    text-align: left !important;
+    font-weight: normal !important;
   }
 
-  .print-parenthetical {
+  /* Dialogue (2.5in from edge -> 1.5in from margin) */
+  .print-dialogue {
     margin-left: 1.5in !important;
+    width: 3.5in !important;
+    margin-bottom: 6pt !important;
+  }
+
+  /* Parenthetical (2.1in from margin) */
+  .print-parenthetical {
+    margin-left: 2.1in !important;
     width: 2.5in !important;
+    margin-top: -3pt !important;
+    margin-bottom: -3pt !important;
+    font-style: italic !important;
   }
 
+  /* Transition (Flush Right) */
   .print-transition {
+    margin-left: auto !important;
     text-align: right !important;
-    width: 100% !important;
+    width: 2in !important;
+    margin-top: 12pt !important;
+    text-transform: uppercase !important;
   }
 
-  /* Text Reset - Only override font to professional monograph */
-  * {
-    font-family: "Courier Prime", "Courier New", Courier, monospace !important;
-    font-size: 12pt !important;
-    line-height: normal !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  /* Global typography override for all print descendants */
+  #fadex-print-container * {
+    font-family: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    color: inherit !important;
   }
 }
 
@@ -243,4 +273,45 @@
   font-size: 9px;
   letter-spacing: 0.1em;
   pointer-events: none;
+}
+
+/* Print-Ready (Paper Simulation) View */
+.print-ready-mode {
+  background: #2a2a2a !important; /* Dark desk background */
+  background-image: none !important;
+  min-height: 100vh;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+.print-ready-mode #script-editor-canvas {
+  background: white !important;
+  color: black !important;
+  width: 8.5in !important;
+  min-height: 11in !important;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid #dcd8c9 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 1in !important;
+}
+
+.print-ready-mode textarea {
+  color: black !important;
+}
+
+.print-ready-mode .editor-page-strip {
+  background-image: linear-gradient(
+    to bottom,
+    transparent 10in,
+    #f0f0f0 10in,
+    #f0f0f0 11in,
+    transparent 11in
+  ) !important;
+  background-size: 100% 11in !important;
+}
+
+.print-ready-mode .editor-page-strip-label {
+  right: -100px;
+  color: white/40;
 }

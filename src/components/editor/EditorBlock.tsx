@@ -50,27 +50,23 @@ export function EditorBlock({
   const getStylesForType = (type: string) => {
     switch (type) {
       case "scene_heading":
-        return "uppercase font-bold w-full text-foreground/90 mt-5 sm:mt-8 mb-2 sm:mb-4 tracking-wide text-xs sm:text-base drop-shadow-sm border-l-2 sm:border-l-4 border-primary/40 pl-3 sm:pl-4 print:mt-6 print:mb-4";
+        return "uppercase font-bold w-full text-foreground/90 mt-5 sm:mt-8 mb-2 sm:mb-4 tracking-wide text-xs sm:text-base drop-shadow-sm border-l-2 sm:border-l-4 border-primary/40 pl-3 sm:pl-4";
       case "action":
-        return "w-full text-foreground/80 mt-1.5 sm:mt-2 mb-1.5 sm:mb-2 leading-relaxed print:my-4";
+        return "w-full text-foreground/80 mt-1.5 sm:mt-2 mb-1.5 sm:mb-2 leading-relaxed";
       case "character":
-        // 3.7" from paper edge -> 2.7" from margin
-        return "uppercase w-full text-center sm:w-fit sm:mx-auto sm:min-w-[40%] text-primary font-bold mt-4 sm:mt-6 tracking-wide print:ml-[2.7in] print:w-auto print:mx-0 print:mt-6";
+        return "uppercase w-full text-center sm:w-fit sm:mx-auto sm:min-w-[40%] text-primary font-bold mt-4 sm:mt-6 tracking-wide";
       case "dialogue":
-        // 2.5" from paper edge -> 1.5" from margin
-        return "w-[92%] mx-auto sm:w-[65%] sm:mx-0 sm:ml-[15%] text-black dark:text-zinc-200 print:ml-[1.5in] print:w-[3.5in]";
+        return "w-[92%] mx-auto sm:w-[65%] sm:mx-0 sm:ml-[15%] text-black dark:text-zinc-200";
       case "parenthetical":
-        // 3.1" from paper edge -> 2.1" from margin
-        return "italic text-center w-[85%] mx-auto sm:w-[50%] sm:mx-0 sm:ml-[25%] sm:text-left text-black dark:text-zinc-200 mt-1 mb-1 print:ml-[2.1in] print:w-[2.5in]";
+        return "italic text-center w-[85%] mx-auto sm:w-[50%] sm:mx-0 sm:ml-[25%] sm:text-left text-black dark:text-zinc-200 mt-1 mb-1";
       case "transition":
-        // Flush right: ~5.5 inches from left
-        return "uppercase text-right w-full text-black dark:text-white mt-3 sm:mt-4 print:text-right print:mt-6";
+        return "uppercase text-right w-full text-black dark:text-white mt-3 sm:mt-4";
       case "shot":
-        return "uppercase font-bold w-full text-black dark:text-white mt-3 sm:mt-4 print:mt-4";
+        return "uppercase font-bold w-full text-black dark:text-white mt-3 sm:mt-4";
       case "montage":
-        return "uppercase font-bold w-full text-zinc-600 dark:text-zinc-400 mt-3 sm:mt-4 print:mt-4";
+        return "uppercase font-bold w-full text-zinc-600 dark:text-zinc-400 mt-3 sm:mt-4";
       case "text_on_screen":
-        return "italic w-[92%] mx-auto sm:w-[65%] sm:mx-0 sm:ml-[15%] text-black dark:text-zinc-200 print:ml-[1.5in]";
+        return "italic w-[92%] mx-auto sm:w-[65%] sm:mx-0 sm:ml-[15%] text-black dark:text-zinc-200";
       default:
         return "w-full";
     }
@@ -405,23 +401,24 @@ export function EditorBlock({
         className={cn(
           "resize-none outline-none bg-transparent placeholder:text-zinc-300 dark:placeholder:text-zinc-700 py-1 transition-all",
           "font-courier text-[13px] sm:text-[16px] lg:text-[18px] leading-[1.4] sm:leading-[1.3]",
-          "print:hidden",
+          "print:hidden", // Hide the input element during print
           getStylesForType(block.type),
         )}
         spellCheck={false}
       />
 
+      {/* High-Fidelity Print Stream */}
       <div
         className={cn(
           "hidden print:block whitespace-pre-wrap py-1 print:text-black",
           "font-courier text-[12pt] leading-none",
-          block.type === "scene_heading" && "print-heading",
+          block.type === "scene_heading" && "print-scene_heading",
           block.type === "action" && "print-action",
           block.type === "character" && "print-character",
           block.type === "dialogue" && "print-dialogue",
           block.type === "parenthetical" && "print-parenthetical",
           block.type === "transition" && "print-transition",
-          getStylesForType(block.type),
+          block.type === "shot" && "print-shot",
         )}
       >
         {block.content || "\u00A0"}
