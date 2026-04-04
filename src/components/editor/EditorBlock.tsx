@@ -1,7 +1,12 @@
+"use client";
+
 import TextareaAutosize from "react-textarea-autosize";
 import { ScreenplayBlock } from "@/lib/editor-types";
 import { cn } from "@/lib/utils";
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState } from "react";
+import { GripVertical, GripHorizontal } from "lucide-react";
+import { useBlockSuggestions } from "@/hooks/useBlockSuggestions";
+import { getStylesForType } from "@/lib/editor-constants";
 
 interface EditorBlockProps {
   block: ScreenplayBlock;
@@ -22,8 +27,6 @@ interface EditorBlockProps {
   onDrop?: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
 }
 
-import { GripVertical, GripHorizontal } from "lucide-react";
-
 export function EditorBlock({
   block,
   isActive,
@@ -40,6 +43,7 @@ export function EditorBlock({
 }: EditorBlockProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const suggestions = useBlockSuggestions(isActive, block, allBlocks);
 
   useEffect(() => {
     if (isActive && textareaRef.current) {
@@ -47,40 +51,11 @@ export function EditorBlock({
     }
   }, [isActive]);
 
-  const getStylesForType = (type: string) => {
-    switch (type) {
-      case "scene_heading":
-        return "uppercase font-bold w-full text-foreground/90 mt-5 sm:mt-8 mb-2 sm:mb-4 tracking-wide text-xs sm:text-base drop-shadow-sm border-l-2 sm:border-l-4 border-primary/40 pl-3 sm:pl-4";
-      case "action":
-        return "w-full text-foreground/80 mt-1.5 sm:mt-2 mb-1.5 sm:mb-2 leading-relaxed";
-      case "character":
-        return "uppercase w-full text-center sm:w-fit sm:mx-auto sm:min-w-[40%] text-primary font-bold mt-4 sm:mt-6 tracking-wide";
-      case "dialogue":
-        return "w-[92%] mx-auto sm:w-[65%] sm:mx-0 sm:ml-[15%] text-black dark:text-zinc-200";
-      case "parenthetical":
-        return "italic text-center w-[85%] mx-auto sm:w-[50%] sm:mx-0 sm:ml-[25%] sm:text-left text-black dark:text-zinc-200 mt-1 mb-1";
-      case "transition":
-        return "uppercase text-right w-full text-black dark:text-white mt-3 sm:mt-4";
-      case "shot":
-        return "uppercase font-bold w-full text-black dark:text-white mt-3 sm:mt-4";
-      case "montage":
-        return "uppercase font-bold w-full text-zinc-600 dark:text-zinc-400 mt-3 sm:mt-4";
-      case "text_on_screen":
-        return "italic w-[92%] mx-auto sm:w-[65%] sm:mx-0 sm:ml-[15%] text-black dark:text-zinc-200";
-      default:
-        return "w-full";
-    }
-  };
-
   const handleBlur = () => {
     if (block.type === "parenthetical" && block.content.trim() !== "") {
       let updatedContent = block.content.trim();
-      if (!updatedContent.startsWith("(")) {
-        updatedContent = "(" + updatedContent;
-      }
-      if (!updatedContent.endsWith(")")) {
-        updatedContent = updatedContent + ")";
-      }
+      if (!updatedContent.startsWith("(")) updatedContent = "(" + updatedContent;
+      if (!updatedContent.endsWith(")")) updatedContent = updatedContent + ")";
 
       if (updatedContent !== block.content) {
         onUpdate(block.id, updatedContent);
@@ -88,199 +63,14 @@ export function EditorBlock({
     }
   };
 
-  const suggestions = useMemo(() => {
-    if (!isActive) return [];
-    const contentToMatch =
-      typeof block.content === "string" ? block.content : "";
-    const lowerContent = contentToMatch.toLowerCase();
-
-    if (block.type === "character") {
-      if (!lowerContent) return [];
-      const characters = new Set(
-        allBlocks
-          .filter(
-            (b) =>
-              b.type === "character" &&
-              typeof b.content === "string" &&
-              b.content.trim(),
-          )
-          .map((b) => b.content.toUpperCase()),
-      );
-      return Array.from(characters).filter(
-        (c) =>
-          typeof c === "string" &&
-          c.toLowerCase().includes(lowerContent) &&
-          c.toLowerCase() !== lowerContent,
-      );
-    }
-
-    if (block.type === "scene_heading") {
-      const isTimeMode = lowerContent.includes("-");
-
-      if (isTimeMode) {
-        const dashIndex = contentToMatch.lastIndexOf("-");
-        let base = contentToMatch.substring(0, dashIndex + 1);
-        let timeQuery = contentToMatch.substring(dashIndex + 1);
-        if (timeQuery.startsWith(" ")) {
-          base += " ";
-          timeQuery = timeQuery.substring(1);
-        } else {
-          base += " ";
-        }
-
-        const customTimes = new Set<string>();
-        allBlocks.forEach((b) => {
-          if (b.type === "scene_heading" && typeof b.content === "string") {
-            const match = b.content.match(/-\s*(.+)$/);
-            if (match && match[1])
-              customTimes.add(match[1].trim().toUpperCase());
-          }
-        });
-
-        const standardTimes = [
-          "DAY",
-          "NIGHT",
-          "MORNING",
-          "EVENING",
-          "CONTINUOUS",
-          "LATER",
-        ];
-
-        const allTimes = Array.from(
-          new Set([...standardTimes, ...Array.from(customTimes)]),
-        );
-
-        const matchedTimes = allTimes.filter((t) =>
-          t.toLowerCase().startsWith(timeQuery.toLowerCase()),
-        );
-        return matchedTimes.map((t) => base + t);
-      }
-
-      const prefixMatch = contentToMatch.match(
-        /^(INT\.|EXT\.|INT\.\/EXT\.|EXT\.\/INT\.|I\/E\.)\s+(.*)/i,
-      );
-
-      if (prefixMatch) {
-        const prefix = prefixMatch[1].toUpperCase() + " ";
-        const locQuery = prefixMatch[2].toLowerCase();
-
-        const locations = new Set<string>();
-        allBlocks.forEach((b) => {
-          if (b.type === "scene_heading" && typeof b.content === "string") {
-            const matchLoc = b.content.match(
-              /^(?:INT\.|EXT\.|INT\.\/EXT\.|EXT\.\/INT\.|I\/E\.)\s+(.*?)(?:\s*-|$)/i,
-            );
-            if (matchLoc && matchLoc[1])
-              locations.add(matchLoc[1].trim().toUpperCase());
-          }
-        });
-
-        const matchedLocs = Array.from(locations).filter(
-          (l) =>
-            l.toLowerCase().includes(locQuery) && l !== locQuery.toUpperCase(),
-        );
-        return matchedLocs.map((l) => prefix + l + " - ");
-      }
-
-      const prefixes = ["INT. ", "EXT. ", "INT./EXT. "];
-      if (!lowerContent) return prefixes;
-
-      const isPrefixMatch = prefixes.filter((p) =>
-        p.toLowerCase().startsWith(lowerContent),
-      );
-      if (isPrefixMatch.length > 0) return isPrefixMatch;
-
-      return [];
-    }
-
-    if (block.type === "transition") {
-      const standardTransitions = [
-        "CUT TO:",
-        "FADE IN:",
-        "FADE OUT.",
-        "DISSOLVE TO:",
-        "SMASH CUT TO:",
-        "MATCH CUT TO:",
-        "INTERCUT WITH:",
-      ];
-
-      const customTransitions = new Set<string>();
-      allBlocks.forEach((b) => {
-        if (
-          b.type === "transition" &&
-          typeof b.content === "string" &&
-          b.content.trim()
-        ) {
-          customTransitions.add(b.content.trim().toUpperCase());
-        }
-      });
-
-      const allTransitions = Array.from(
-        new Set([...standardTransitions, ...Array.from(customTransitions)]),
-      );
-
-      if (!lowerContent) return allTransitions;
-
-      return allTransitions.filter(
-        (t) =>
-          t.toLowerCase().includes(lowerContent) &&
-          t.toLowerCase() !== lowerContent,
-      );
-    }
-
-    if (block.type === "shot") {
-      const standardShots = [
-        "ANGLE ON",
-        "WIDE SHOT",
-        "CLOSE UP",
-        "EXTREME CLOSE UP",
-        "POV",
-        "REVERSE ANGLE",
-        "PAN TO",
-        "TRACKING SHOT",
-        "AERIAL SHOT",
-      ];
-
-      const customShots = new Set<string>();
-      allBlocks.forEach((b) => {
-        if (
-          b.type === "shot" &&
-          typeof b.content === "string" &&
-          b.content.trim()
-        ) {
-          customShots.add(b.content.trim().toUpperCase());
-        }
-      });
-
-      const allShots = Array.from(
-        new Set([...standardShots, ...Array.from(customShots)]),
-      );
-
-      if (!lowerContent) return allShots;
-
-      return allShots.filter(
-        (s) =>
-          s.toLowerCase().includes(lowerContent) &&
-          s.toLowerCase() !== lowerContent,
-      );
-    }
-
-    return [];
-  }, [isActive, block.content, block.type, allBlocks]);
-
-  const handleKeyDownWrapper = (
-    e: React.KeyboardEvent<HTMLTextAreaElement>,
-  ) => {
-    // Formatting Shortcuts (Cmd/Ctrl + B, I, U)
-    if (
-      (e.metaKey || e.ctrlKey) &&
-      (e.key === "b" || e.key === "i" || e.key === "u")
-    ) {
+  const handleKeyDownWrapper = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Markdown-style Formatting (Cmd/Ctrl + B, I, U)
+    if ((e.metaKey || e.ctrlKey) && (e.key === "b" || e.key === "i" || e.key === "u")) {
       e.preventDefault();
       const textarea = e.currentTarget;
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
-      if (start === end) return; // No text selected
+      if (start === end) return;
 
       const char = e.key === "b" ? "**" : e.key === "i" ? "*" : "_";
       const selectedText = block.content.substring(start, end);
@@ -293,13 +83,9 @@ export function EditorBlock({
 
       onUpdate(block.id, newContent);
 
-      // Reselect the text after a brief render delay
       requestAnimationFrame(() => {
         if (textareaRef.current) {
-          textareaRef.current.setSelectionRange(
-            start + char.length,
-            end + char.length,
-          );
+          textareaRef.current.setSelectionRange(start + char.length, end + char.length);
         }
       });
       return;
@@ -308,16 +94,12 @@ export function EditorBlock({
     if (suggestions.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev === -1 ? 0 : (prev + 1) % suggestions.length,
-        );
+        setSelectedIndex((prev) => (prev === -1 ? 0 : (prev + 1) % suggestions.length));
         return;
       }
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev <= 0 ? suggestions.length - 1 : prev - 1,
-        );
+        setSelectedIndex((prev) => (prev <= 0 ? suggestions.length - 1 : prev - 1));
         return;
       }
       if (e.key === "Enter" && !e.shiftKey) {
@@ -327,7 +109,6 @@ export function EditorBlock({
           setSelectedIndex(-1);
           return;
         }
-        // If nothing is selected, let it pass to parent so it acts like normal!
       }
       if (e.key === "Escape") {
         setSelectedIndex(-1);
@@ -349,47 +130,38 @@ export function EditorBlock({
       onDragOver={onDragOver}
       onDrop={(e) => onDrop?.(e, block.id)}
     >
-      {/* Desktop Formatting Floating Indicator */}
+      {/* Block Type Indicator */}
       <div
         className={cn(
           "absolute -left-8 top-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 text-[10px] font-brand uppercase tracking-widest px-2 py-0.5 rounded-full bg-secondary text-muted-foreground hidden sm:block print:hidden",
-          isActive &&
-            "opacity-100 bg-primary/20 text-primary shadow-[0_0_10px_rgba(99,102,241,0.2)]",
+          isActive && "opacity-100 bg-primary/20 text-primary shadow-sm",
         )}
       >
         {block.type.replace("_", " ")}
       </div>
 
-      {/* Desktop Drag Handle */}
+      {/* Drag Handles */}
       {isActive && (
-        <div className="absolute -left-12 top-2 opacity-0 group-hover:opacity-100 active:opacity-100 cursor-grab active:cursor-grabbing text-zinc-400 dark:text-zinc-600 hidden sm:block print:hidden transition-opacity">
-          <GripVertical className="h-4 w-4" />
-        </div>
+        <>
+          <div className="absolute -left-12 top-2 opacity-0 group-hover:opacity-100 active:opacity-100 cursor-grab text-zinc-400 hidden sm:block print:hidden transition-opacity">
+            <GripVertical className="h-4 w-4" />
+          </div>
+          <div className="absolute left-1/2 -translate-x-1/2 -top-2 opacity-100 cursor-grab px-6 py-2 sm:hidden print:hidden flex justify-center items-center h-4 text-[#136F63]/30 hover:text-[#136F63]/80 transition-colors z-10 bg-linear-to-b from-transparent via-[#136F63]/5 to-transparent rounded-full w-32">
+            <GripHorizontal className="h-4 w-5" />
+          </div>
+        </>
       )}
 
-      {/* Mobile Fat-Finger Drag Handle */}
-      {isActive && (
-        <div className="absolute left-1/2 -translate-x-1/2 -top-2 opacity-100 cursor-grab active:cursor-grabbing px-6 py-2 sm:hidden print:hidden flex justify-center items-center h-4 text-[#136F63]/30 hover:text-[#136F63]/80 transition-colors z-10 bg-linear-to-b from-transparent via-[#136F63]/5 to-transparent rounded-full shadow-[0_4px_10px_rgba(19,111,99,0.05)] w-32">
-          <GripHorizontal className="h-4 w-5" />
-        </div>
-      )}
-
-      {/* Scene Number */}
+      {/* Scene Numbering */}
       {block.type === "scene_heading" && sceneNumber !== undefined && (
-        <div className="absolute right-0 top-1.5 font-bold text-sm text-zinc-400 dark:text-zinc-500 print:text-black">
+        <div className="absolute right-0 top-1.5 font-bold text-sm text-zinc-400 print:text-black">
           {sceneNumber}
         </div>
       )}
 
       <TextareaAutosize
         ref={textareaRef}
-        placeholder={
-          block.type === "scene_heading"
-            ? "INT. LOCATION - DAY"
-            : block.type === "parenthetical"
-              ? "(parenthetical)"
-              : block.type
-        }
+        placeholder={block.type === "scene_heading" ? "INT. LOCATION - DAY" : block.type}
         value={block.content}
         onChange={(e) => {
           onUpdate(block.id, e.target.value);
@@ -399,31 +171,25 @@ export function EditorBlock({
         onFocus={onFocus}
         onBlur={handleBlur}
         className={cn(
-          "resize-none outline-none bg-transparent placeholder:text-zinc-300 dark:placeholder:text-zinc-700 py-1 transition-all",
+          "resize-none outline-none bg-transparent placeholder:text-zinc-300 py-1 overflow-hidden transition-colors duration-300",
           "font-courier text-[13px] sm:text-[16px] lg:text-[18px] leading-[1.4] sm:leading-[1.3]",
-          "print:hidden", // Hide the input element during print
+          "print:hidden",
           getStylesForType(block.type),
         )}
         spellCheck={false}
       />
 
-      {/* High-Fidelity Print Stream */}
+      {/* Print View Rendering */}
       <div
         className={cn(
-          "hidden print:block whitespace-pre-wrap py-1 print:text-black",
-          "font-courier text-[12pt] leading-none",
-          block.type === "scene_heading" && "print-scene_heading",
-          block.type === "action" && "print-action",
-          block.type === "character" && "print-character",
-          block.type === "dialogue" && "print-dialogue",
-          block.type === "parenthetical" && "print-parenthetical",
-          block.type === "transition" && "print-transition",
-          block.type === "shot" && "print-shot",
+          "hidden print:block whitespace-pre-wrap py-1 print:text-black font-courier text-[12pt] leading-none",
+          `print-${block.type}`,
         )}
       >
         {block.content || "\u00A0"}
       </div>
 
+      {/* Suggestion Dropdown */}
       {isActive && suggestions.length > 0 && (
         <ul
           className={cn(

@@ -28,6 +28,13 @@ interface EditorState {
   cycleBlockType: (scriptId: string, id: string, reverse: boolean) => void;
   deleteBlock: (scriptId: string, id: string) => void;
   moveBlock: (scriptId: string, draggedId: string, dropId: string) => void;
+  moveScene: (scriptId: string, sceneId: string, targetSceneId: string | null) => void;
+  searchAndReplace: (
+    scriptId: string,
+    search: string,
+    replace: string,
+    caseSensitive: boolean,
+  ) => void;
   undo: (scriptId: string) => void;
   redo: (scriptId: string) => void;
   deleteScriptData: (scriptId: string) => void;
@@ -201,6 +208,73 @@ export const useEditorStore = create<EditorState>()(
 
           const [draggedItem] = newBlocks.splice(draggedIndex, 1);
           newBlocks.splice(dropIndex, 0, draggedItem);
+
+          return {
+            scripts: {
+              ...state.scripts,
+              [scriptId]: {
+                ...scriptState,
+                blocks: newBlocks,
+                ...pushHistory(scriptState),
+              },
+            },
+          };
+        }),
+
+      moveScene: (scriptId, sceneId, targetSceneId) =>
+        set((state) => {
+          const scriptState = state.scripts[scriptId];
+          if (!scriptState) return state;
+
+          const blocks = [...scriptState.blocks];
+          
+          // Identify the blocks of the scene to move
+          const startIndex = blocks.findIndex(b => b.id === sceneId);
+          if (startIndex === -1) return state;
+          
+          let endIndex = startIndex + 1;
+          while (endIndex < blocks.length && blocks[endIndex].type !== 'scene_heading') {
+            endIndex++;
+          }
+          
+          const sceneBlocks = blocks.splice(startIndex, endIndex - startIndex);
+          
+          // Re-find the target index since the array has changed
+          const targetIndex = targetSceneId 
+            ? blocks.findIndex(b => b.id === targetSceneId)
+            : blocks.length;
+
+          if (targetIndex !== -1) {
+            blocks.splice(targetIndex, 0, ...sceneBlocks);
+          } else {
+            // Fallback to end if target not found
+            blocks.push(...sceneBlocks);
+          }
+
+          return {
+            scripts: {
+              ...state.scripts,
+              [scriptId]: {
+                ...scriptState,
+                blocks,
+                ...pushHistory(scriptState),
+              },
+            },
+          };
+        }),
+
+      searchAndReplace: (scriptId, search, replace, caseSensitive) =>
+        set((state) => {
+          const scriptState = state.scripts[scriptId];
+          if (!scriptState) return state;
+
+          const flags = caseSensitive ? "g" : "gi";
+          const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+
+          const newBlocks = scriptState.blocks.map(b => ({
+            ...b,
+            content: b.content.replace(regex, replace)
+          }));
 
           return {
             scripts: {

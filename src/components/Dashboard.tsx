@@ -11,18 +11,14 @@ import {
   Edit2,
   FileUp,
   Search,
-  LayoutGrid,
-  List as ListIcon,
   Sparkles,
   ChevronRight,
-  Clock,
 } from "lucide-react";
 import { parseFountain } from "@/lib/fountain";
 
 import { useScriptsStore } from "@/store/scripts";
 import { useEditorStore } from "@/store/editor";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
@@ -55,7 +51,6 @@ export function Dashboard() {
     title: string;
   } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -130,8 +125,7 @@ export function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCF9] text-[#191919] relative selection:bg-[#136F63]/10">
-      {/* Dynamic Background Elements */}
+    <div className="min-h-screen flex flex-col bg-[#FDFCF9] text-[#191919] relative selection:bg-[#136F63]/10">
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div
           className="absolute top-[-15%] right-[-10%] w-[60%] h-[60%] bg-[#136F63]/5 rounded-full blur-[140px] animate-pulse"
@@ -140,20 +134,19 @@ export function Dashboard() {
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#D4C3A3]/20 rounded-full blur-[120px]" />
       </div>
 
-      {/* Modern Sticky Nav */}
       <nav
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-6 lg:px-12",
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-4 lg:px-12",
           isScrolled
-            ? "py-4 bg-white/70 backdrop-blur-xl border-b border-black/10"
-            : "py-8 bg-transparent",
+            ? "py-2 lg:py-4 bg-white/70 backdrop-blur-xl border-b border-black/10"
+            : "py-4 lg:py-8 bg-transparent",
         )}
       >
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-10">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3 lg:gap-0">
+          <div className="flex items-center justify-between w-full lg:w-auto">
             <h1
               onClick={() => router.push("/")}
-              className="font-brand uppercase tracking-[0.2em] text-2xl font-black cursor-pointer group"
+              className="font-brand uppercase tracking-[0.2em] text-xl lg:text-2xl font-black cursor-pointer group"
             >
               FADEX
               <span className="text-[#136F63] group-hover:animate-pulse">
@@ -162,66 +155,41 @@ export function Dashboard() {
             </h1>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center bg-black/5 rounded-full px-4 py-2 border border-black/15 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#136F63]/10 focus-within:border-[#136F63]/30 transition-all w-64 lg:w-96 group">
+          <div className="flex items-center w-full">
+            <div className="flex items-center bg-black/5 rounded-full px-4 py-2 lg:py-3 border border-black/15 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#136F63]/10 focus-within:border-[#136F63]/30 transition-all w-full group">
               <Search className="w-4 h-4 text-black/30 group-focus-within:text-[#136F63] transition-colors" />
               <input
                 type="text"
                 placeholder="Search your scripts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent border-none focus:ring-0 text-sm w-full px-3 placeholder:text-black/30"
+                className="bg-transparent border-none focus:ring-0 focus:outline-none outline-none text-sm w-full px-3 placeholder:text-black/30"
               />
             </div>
           </div>
         </div>
       </nav>
 
-      <main className="relative z-10 pt-32 lg:pt-44 pb-20 px-6 lg:px-12 max-w-7xl mx-auto flex-1">
-        <header className="mb-12 lg:mb-16">
+      <main className="relative z-10 pt-32 lg:pt-44 pb-20 px-6 lg:px-12 max-w-5xl mx-auto flex-1 w-full">
+        <header className="mb-10 lg:mb-12">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
             <div>
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-4 flex-wrap">
                 <span className="px-3 py-1 bg-[#136F63]/10 text-[#136F63] rounded-full text-[9px] font-brand uppercase tracking-widest font-black">
                   Studio Dashboard
                 </span>
-                <div className="h-px w-8 bg-black/10" />
+                <div className="h-px w-8 bg-black/10 hidden sm:block" />
                 <span className="text-[10px] text-black/40 font-brand uppercase tracking-widest">
                   {scripts.length} Project{scripts.length !== 1 ? "s" : ""}
                 </span>
               </div>
-              <h2 className="font-display font-black text-4xl lg:text-5xl tracking-tight leading-none mb-6">
+              <h2 className="font-display font-black text-3xl lg:text-5xl tracking-tight leading-tight lg:leading-none">
                 Your Cinematic <br />
                 <span className="text-[#136F63] italic">Collection.</span>
               </h2>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="bg-white/50 backdrop-blur-sm border border-black/10 rounded-full p-2 flex gap-1 h-14 items-center">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={cn(
-                    "p-3 rounded-full transition-all cursor-pointer h-10 w-10 flex items-center justify-center",
-                    viewMode === "grid"
-                      ? "bg-[#136F63] text-white shadow-lg shadow-[#136F63]/20"
-                      : "text-black/40 hover:bg-black/5",
-                  )}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={cn(
-                    "p-3 rounded-full transition-all cursor-pointer h-10 w-10 flex items-center justify-center",
-                    viewMode === "list"
-                      ? "bg-[#136F63] text-white shadow-lg shadow-[#136F63]/20"
-                      : "text-black/40 hover:bg-black/5",
-                  )}
-                >
-                  <ListIcon className="w-4 h-4" />
-                </button>
-              </div>
-
+            <div className="flex flex-wrap items-center gap-4 lg:gap-6 lg:mb-4">
               <input
                 type="file"
                 id="fountain-import-dash"
@@ -234,23 +202,23 @@ export function Dashboard() {
                 onClick={() =>
                   document.getElementById("fountain-import-dash")?.click()
                 }
-                className="rounded-full border-black/15 bg-white px-8 h-14 tracking-[0.2em] font-brand text-[10px] uppercase hover:bg-[#136F63] hover:text-white hover:border-[#136F63] transition-all cursor-pointer shadow-sm active:scale-95 flex items-center justify-center gap-2.5"
+                className="rounded-full border-black/15 bg-white px-5 lg:px-8 h-12 lg:h-14 tracking-widest lg:tracking-[0.2em] font-brand text-[9px] lg:text-[10px] uppercase hover:bg-[#136F63] hover:text-white hover:border-[#136F63] transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2"
               >
-                <FileUp className="w-4 h-4" />
+                <FileUp className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 Import
               </Button>
               <Button
                 onClick={() => setIsCreateOpen(true)}
-                className="rounded-full bg-[#136F63] hover:bg-[#136F63]/90 text-white px-10 h-14 tracking-[0.2em] font-brand text-[10px] uppercase shadow-2xl shadow-[#136F63]/30 cursor-pointer active:scale-95 flex items-center justify-center gap-2.5"
+                className="rounded-full bg-[#136F63] hover:bg-[#136F63]/90 text-white px-6 lg:px-10 h-12 lg:h-14 tracking-widest lg:tracking-[0.2em] font-brand text-[9px] lg:text-[10px] uppercase shadow-xl lg:shadow-2xl shadow-[#136F63]/30 cursor-pointer flex items-center justify-center gap-2"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                 New Script
               </Button>
             </div>
           </div>
         </header>
 
-        {filteredScripts.length === 0 ? (
+        {scripts.length === 0 ? (
           <div className="group relative flex flex-col items-center justify-center py-32 lg:py-52 text-center rounded-[3rem] bg-white border border-black/5 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.03)] overflow-hidden">
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 bg-[radial-gradient(circle_at_50%_120%,rgba(19,111,99,0.03),transparent)]" />
 
@@ -280,121 +248,51 @@ export function Dashboard() {
             </Button>
           </div>
         ) : (
-          <div
-            className={cn(
-              viewMode === "grid"
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8"
-                : "flex flex-col gap-3",
-            )}
-          >
-            {filteredScripts.map((script, i) =>
-              viewMode === "grid" ? (
-                <Card
-                  key={script.id}
-                  onClick={() => router.push(`/editor/${script.id}`)}
-                  className="group relative flex flex-col rounded-[2.5rem] bg-white border border-black/15 hover:border-[#136F63]/40 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_-10px_rgba(19,111,99,0.1)] transition-all duration-500 hover:-translate-y-1 overflow-hidden cursor-pointer animate-in fade-in slide-in-from-bottom-4"
-                  style={{ animationDelay: `${i * 50}ms` }}
+          <div className="flex flex-col gap-3 lg:gap-4">
+            {searchQuery && filteredScripts.length === 0 ? (
+              <div className="py-24 text-center rounded-[3rem] bg-white border border-black/5">
+                <Search className="w-12 h-12 text-[#136F63]/20 mx-auto mb-4" />
+                <h3 className="text-xl font-display font-black tracking-tight mb-2">
+                  No matching scripts
+                </h3>
+                <p className="text-black/40 text-xs font-brand uppercase tracking-widest mb-6">
+                  Found nothing for &quot;{searchQuery}&quot;
+                </p>
+                <Button
+                  onClick={() => setSearchQuery("")}
+                  variant="outline"
+                  className="rounded-full border-black/10 text-[9px] font-brand uppercase tracking-widest px-8"
                 >
-                  <div className="aspect-4/3 bg-[#F9F9F7] relative flex items-center justify-center group-hover:bg-[#136F63]/5 transition-colors overflow-hidden border-b border-black/5">
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity">
-                      <div className="absolute top-10 left-10 right-10 flex flex-col gap-3">
-                        <div className="h-1.5 w-full bg-black rounded-full" />
-                        <div className="h-1.5 w-2/3 bg-black rounded-full" />
-                        <div className="h-1.5 w-5/6 bg-black rounded-full" />
-                      </div>
-                    </div>
-
-                    <div className="relative z-10 w-16 h-16 bg-white rounded-3xl shadow-xl shadow-black/5 flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-2 transition-all duration-500">
-                      <FileText className="w-8 h-8 text-[#136F63]/40 group-hover:text-[#136F63]" />
-                    </div>
-
-                    <div
-                      className="absolute top-5 right-5"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="w-10 h-10 rounded-full bg-white text-[#191919] border-black/10 hover:bg-[#136F63] hover:text-white hover:border-[#136F63] transition-all shadow-sm cursor-pointer z-20"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="rounded-2xl border-black/10 p-1.5 shadow-2xl"
-                        >
-                          <DropdownMenuItem
-                            onClick={() =>
-                              openRenameDialog(script.id, script.title)
-                            }
-                            className="rounded-xl gap-3 px-4 py-3 cursor-pointer focus:bg-[#136F63] focus:text-white group/item"
-                          >
-                            <Edit2 className="w-4 h-4 text-black/50 group-focus/item:text-white transition-colors" />
-                            Rename
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              openDeleteDialog(script.id, script.title)
-                            }
-                            className="rounded-xl gap-3 px-4 py-3 cursor-pointer text-red-600 focus:bg-red-500 focus:text-white group/del transition-colors"
-                          >
-                            <Trash className="w-4 h-4 text-red-500 group-focus/del:text-white transition-colors" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-
-                  <div className="p-8 pb-10">
-                    <h4 className="font-display font-black text-lg text-black mb-2 truncate group-hover:text-[#136F63] transition-colors">
-                      {script.title}
-                    </h4>
-                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-black/3">
-                      <div className="flex items-center gap-2 text-[9px] text-black/40 font-brand uppercase tracking-widest font-bold whitespace-nowrap">
-                        <Clock className="w-3.5 h-3.5 text-[#136F63]" />
-                        EDITED{" "}
-                        {format(
-                          new Date(script.updated_at),
-                          "MMM d, yyyy · h:mm a",
-                        )}
-                      </div>
-                      <div className="h-1.5 w-1.5 rounded-full bg-black/10 group-hover:bg-[#136F63] group-hover:shadow-[0_0_8px_rgba(19,111,99,0.4)] transition-all duration-500" />
-                    </div>
-                  </div>
-                </Card>
-              ) : (
+                  Show all projects
+                </Button>
+              </div>
+            ) : (
+              filteredScripts.map((script, i) => (
                 <div
                   key={script.id}
                   onClick={() => router.push(`/editor/${script.id}`)}
-                  className="group flex items-center justify-between p-5 bg-white border border-black/5 hover:border-[#136F63]/20 rounded-3xl hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.05)] transition-all cursor-pointer animate-in fade-in slide-in-from-left-2"
+                  className="group flex items-center justify-between p-4 lg:p-6 bg-white border border-black/5 hover:border-[#136F63]/20 rounded-2xl lg:rounded-[2rem] hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.06)] transition-all cursor-pointer animate-in fade-in slide-in-from-left-2"
                   style={{ animationDelay: `${i * 30}ms` }}
                 >
-                  <div className="flex items-center gap-6 min-w-0">
-                    <div className="w-12 h-12 bg-[#F9F9F7] group-hover:bg-[#136F63]/5 rounded-2xl flex items-center justify-center transition-colors">
-                      <FileText className="w-6 h-6 text-black/20 group-hover:text-[#136F63]/60" />
+                  <div className="flex items-center gap-4 lg:gap-8 min-w-0">
+                    <div className="w-10 h-10 lg:w-16 lg:h-16 bg-[#F9F9F7] group-hover:bg-[#136F63]/5 rounded-xl lg:rounded-3xl flex items-center justify-center transition-colors">
+                      <FileText className="w-5 h-5 lg:w-8 lg:h-8 text-black/20 group-hover:text-[#136F63]/60" />
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-display font-black text-base text-black truncate group-hover:text-[#136F63] transition-colors">
+                      <h4 className="font-display font-black text-sm lg:text-xl text-black truncate group-hover:text-[#136F63] transition-colors leading-tight lg:mb-1">
                         {script.title}
                       </h4>
-                      <p className="text-[9px] text-black/40 font-brand uppercase tracking-widest mt-0.5 font-bold">
-                        EDITED{" "}
-                        {format(
-                          new Date(script.updated_at),
-                          "MMMM d, yyyy · h:mm a",
-                        )}
+                      <p className="text-[8px] lg:text-[10px] text-black/40 font-brand uppercase tracking-widest font-bold">
+                        LAST EDITED ·{" "}
+                        {format(new Date(script.updated_at), "MMM d, h:mm a")}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6">
-                    <div className="hidden md:flex flex-col items-end">
+                  <div className="flex items-center gap-4">
+                    <div className="hidden sm:block">
                       <span className="text-[10px] text-[#136F63] font-brand uppercase tracking-tighter font-black opacity-0 group-hover:opacity-100 transition-opacity">
-                        Ready to edit
+                        Enter Editor
                       </span>
                     </div>
 
@@ -408,7 +306,7 @@ export function Dashboard() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="w-10 h-10 rounded-full hover:bg-black/5"
+                            className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl hover:bg-black/5"
                           >
                             <MoreVertical className="w-4 h-4 text-black/30" />
                           </Button>
@@ -440,134 +338,131 @@ export function Dashboard() {
                     </div>
                   </div>
                 </div>
-              ),
+              ))
             )}
           </div>
         )}
+      </main>
 
-        {/* Dialogs and Modals */}
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogContent className="rounded-[3rem] p-10 lg:p-14 border-none shadow-[0_50px_100px_-50px_rgba(0,0,0,0.5)] bg-[#F3F1EA] max-w-xl">
-            <DialogHeader className="items-center text-center relative">
-              <div className="w-20 h-20 bg-[#136F63]/10 rounded-full flex items-center justify-center mb-8">
-                <Sparkles className="w-10 h-10 text-[#136F63]" />
-              </div>
-              <DialogTitle className="text-3xl lg:text-4xl font-display font-black tracking-tight mb-2">
-                New{" "}
-                <span className="text-[#136F63] italic font-serif">
-                  Journey.
-                </span>
-              </DialogTitle>
-              <DialogDescription className="text-black/50 font-medium">
-                Give your cinematic project a name to get started.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreateSubmit} className="mt-6">
-              <Input
-                placeholder="The Greatest Story Never Told..."
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                className="h-16 rounded-2xl bg-black/5 border-none px-6 text-lg focus-visible:ring-2 focus-visible:ring-[#136F63]/10 focus-visible:bg-white transition-all font-medium placeholder:text-black/20"
-                autoFocus
-              />
-              <DialogFooter className="mt-10 sm:justify-center gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsCreateOpen(false)}
-                  className="rounded-full px-10 h-14 font-brand text-[10px] uppercase tracking-widest text-[#191919] border-black/15 bg-white hover:bg-black hover:text-white transition-all duration-300"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={!newTitle.trim()}
-                  className="rounded-full bg-[#136F63] hover:bg-[#191919] text-[#F3EFE0] px-12 h-16 font-brand text-sm tracking-[0.2em] font-black shadow-2xl shadow-[#136F63]/30 transition-all hover:scale-[1.05] active:scale-[0.98] cursor-pointer z-9999"
-                >
-                  Begin Writing
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
-          <DialogContent className="rounded-[3rem] p-10 lg:p-14 border-none shadow-2xl">
-            <DialogHeader className="items-center text-center">
-              <div className="w-20 h-20 bg-[#136F63]/5 rounded-[2.5rem] flex items-center justify-center mb-8">
-                <Edit2 className="w-8 h-8 text-[#136F63]" />
-              </div>
-              <DialogTitle className="text-3xl font-display font-black tracking-tight mb-2">
-                Update <span className="text-[#136F63] italic">Identity.</span>
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleRenameSubmit} className="mt-4">
-              <Input
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                className="h-16 rounded-2xl bg-black/5 border-none px-6 text-lg focus-visible:ring-0 focus-visible:bg-black/10 transition-all font-medium"
-                autoFocus
-              />
-              <DialogFooter className="mt-10 sm:justify-center gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsRenameOpen(false)}
-                  className="rounded-full px-10 h-14 font-brand text-[10px] uppercase tracking-widest text-[#191919] border-black/15 bg-white hover:bg-black hover:text-white transition-all duration-300"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={!newTitle.trim()}
-                  className="rounded-full bg-[#136F63] hover:bg-[#136F63]/90 text-white px-12 h-14 font-brand text-[10px] uppercase tracking-widest shadow-xl shadow-[#136F63]/20 transition-all"
-                >
-                  Rename Script
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-          <DialogContent className="rounded-[3rem] border-none shadow-2xl p-10">
-            <DialogHeader className="items-center text-center">
-              <div className="w-20 h-20 bg-red-50 rounded-[2.5rem] flex items-center justify-center mb-6">
-                <Trash className="w-10 h-10 text-red-500" />
-              </div>
-              <DialogTitle className="text-3xl font-display font-black tracking-tight">
-                Move to <span className="text-red-500 italic">Trash?</span>
-              </DialogTitle>
-              <DialogDescription className="text-black/40 text-sm mt-4 px-6 leading-relaxed font-medium">
-                Are you sure you want to delete{" "}
-                <span className="text-black font-bold">
-                  &quot;{scriptToDelete?.title}&quot;
-                </span>
-                ? This action is permanent and cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="rounded-[3rem] p-10 lg:p-14 border-none shadow-[0_50px_100px_-50px_rgba(0,0,0,0.5)] bg-[#F3F1EA] max-w-xl">
+          <DialogHeader className="items-center text-center relative">
+            <div className="w-20 h-20 bg-[#136F63]/10 rounded-full flex items-center justify-center mb-8">
+              <Sparkles className="w-10 h-10 text-[#136F63]" />
+            </div>
+            <DialogTitle className="text-3xl lg:text-4xl font-display font-black tracking-tight mb-2">
+              New{" "}
+              <span className="text-[#136F63] italic font-serif">Journey.</span>
+            </DialogTitle>
+            <DialogDescription className="text-black/50 font-medium">
+              Give your cinematic project a name to get started.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateSubmit} className="mt-6">
+            <Input
+              placeholder="The Greatest Story Never Told..."
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              className="h-16 rounded-2xl bg-black/5 border-none px-6 text-lg focus-visible:ring-2 focus-visible:ring-[#136F63]/10 focus-visible:bg-white transition-all font-medium placeholder:text-black/20"
+              autoFocus
+            />
             <DialogFooter className="mt-10 sm:justify-center gap-4">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsDeleteOpen(false)}
+                onClick={() => setIsCreateOpen(false)}
                 className="rounded-full px-10 h-14 font-brand text-[10px] uppercase tracking-widest text-[#191919] border-black/15 bg-white hover:bg-black hover:text-white transition-all duration-300"
               >
-                Keep Script
+                Cancel
               </Button>
               <Button
-                type="button"
-                onClick={handleDeleteConfirm}
-                className="rounded-full bg-red-600 hover:bg-red-700 text-white px-12 h-14 font-brand text-[10px] uppercase tracking-widest shadow-xl shadow-red-200 transition-all"
+                type="submit"
+                disabled={!newTitle.trim()}
+                className="rounded-full bg-[#136F63] hover:bg-[#191919] text-[#F3EFE0] px-12 h-16 font-brand text-sm tracking-[0.2em] font-black shadow-2xl shadow-[#136F63]/30 transition-all hover:scale-[1.05] active:scale-[0.98] cursor-pointer z-9999"
               >
-                Delete Forever
+                Begin Writing
               </Button>
             </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </main>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <footer className="relative z-10 border-t border-black/5 bg-white/30 backdrop-blur-md py-12 px-6 lg:px-12 mt-20">
+      <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
+        <DialogContent className="rounded-[3rem] p-10 lg:p-14 border-none shadow-2xl">
+          <DialogHeader className="items-center text-center">
+            <div className="w-20 h-20 bg-[#136F63]/5 rounded-[2.5rem] flex items-center justify-center mb-8">
+              <Edit2 className="w-8 h-8 text-[#136F63]" />
+            </div>
+            <DialogTitle className="text-3xl font-display font-black tracking-tight mb-2">
+              Update <span className="text-[#136F63] italic">Identity.</span>
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleRenameSubmit} className="mt-4">
+            <Input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              className="h-16 rounded-2xl bg-black/5 border-none px-6 text-lg focus-visible:ring-0 focus-visible:bg-black/10 transition-all font-medium"
+              autoFocus
+            />
+            <DialogFooter className="mt-10 sm:justify-center gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsRenameOpen(false)}
+                className="rounded-full px-10 h-14 font-brand text-[10px] uppercase tracking-widest text-[#191919] border-black/15 bg-white hover:bg-black hover:text-white transition-all duration-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={!newTitle.trim()}
+                className="rounded-full bg-[#136F63] hover:bg-[#136F63]/90 text-white px-12 h-14 font-brand text-[10px] uppercase tracking-widest shadow-xl shadow-[#136F63]/20 transition-all"
+              >
+                Rename Script
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <DialogContent className="rounded- border-none shadow-2xl p-10">
+          <DialogHeader className="items-center text-center">
+            <div className="w-20 h-20 bg-red-50 rounded-[2.5rem] flex items-center justify-center mb-6">
+              <Trash className="w-10 h-10 text-red-500" />
+            </div>
+            <DialogTitle className="text-3xl font-display font-black tracking-tight">
+              Move to <span className="text-red-500 italic">Trash?</span>
+            </DialogTitle>
+            <DialogDescription className="text-black/40 text-sm mt-4 px-6 leading-relaxed font-medium">
+              Are you sure you want to delete{" "}
+              <span className="text-black font-bold">
+                &quot;{scriptToDelete?.title}&quot;
+              </span>
+              ? This action is permanent and cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-10 sm:justify-center gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDeleteOpen(false)}
+              className="rounded-full px-10 h-14 font-brand text-[10px] uppercase tracking-widest text-[#191919] border-black/15 bg-white hover:bg-black hover:text-white transition-all duration-300"
+            >
+              Keep Script
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDeleteConfirm}
+              className="rounded-full bg-red-600 hover:bg-red-700 text-white px-12 h-14 font-brand text-[10px] uppercase tracking-widest shadow-xl shadow-red-200 transition-all"
+            >
+              Delete Forever
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <footer className="relative z-10 border-t border-black/5 bg-white/30 backdrop-blur-md py-8 lg:py-12 px-6 lg:px-12 mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-8">
           <div className="flex flex-col items-center sm:items-start gap-2">
             <h1 className="font-brand uppercase tracking-[0.2em] text-xl font-black">
@@ -576,17 +471,6 @@ export function Dashboard() {
             <p className="text-[9px] font-brand uppercase tracking-widest text-black/30">
               Created with structural precision.
             </p>
-          </div>
-
-          <div className="flex items-center gap-8">
-            {["Privacy", "Terms", "Support", "Fountain Format"].map((item) => (
-              <button
-                key={item}
-                className="text-[10px] font-brand uppercase tracking-widest text-black/30 hover:text-black transition-colors"
-              >
-                {item}
-              </button>
-            ))}
           </div>
 
           <p className="text-[10px] font-brand uppercase tracking-widest text-black/20">

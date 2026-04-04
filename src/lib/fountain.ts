@@ -3,8 +3,25 @@ import { ScreenplayBlock, BlockType } from "./editor-types";
 /**
  * Generates a .fountain string from an array of ScreenplayBlocks.
  */
-export const generateFountain = (blocks: ScreenplayBlock[], title: string = "Untitled"): string => {
-  const fountain = `Title: ${title.toUpperCase()}\n\n`;
+export const generateFountain = (
+  blocks: ScreenplayBlock[],
+  metadata: {
+    title: string;
+    author?: string;
+    based_on?: string;
+    contact_info?: string;
+    status?: string;
+  },
+): string => {
+  let fountain = "";
+
+  if (metadata.title) fountain += `Title: ${metadata.title.toUpperCase()}\n`;
+  if (metadata.author) fountain += `Author: ${metadata.author}\n`;
+  if (metadata.based_on) fountain += `Notes: ${metadata.based_on.replace(/\n/g, "\n       ")}\n`;
+  if (metadata.status) fountain += `Draft date: ${metadata.status}\n`;
+  if (metadata.contact_info) fountain += `Contact: ${metadata.contact_info.replace(/\n/g, "\n         ")}\n`;
+
+  if (fountain) fountain += "\n\n";
 
   const body = blocks
     .map((block) => {

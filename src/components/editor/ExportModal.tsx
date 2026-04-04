@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useEditorStore } from "@/store/editor";
 import { generateFountain } from "@/lib/fountain";
+import { useScriptsStore } from "@/store/scripts";
 import {
   Dialog,
   DialogContent,
@@ -32,10 +33,12 @@ export function ExportModal({
   scriptId,
   scriptTitle = "Untitled",
 }: ExportModalProps) {
-  const { scripts } = useEditorStore();
+  const { scripts: editorScripts } = useEditorStore();
+  const { scripts: dashboardScripts } = useScriptsStore();
   const [isPreparing, setIsPreparing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const scriptState = scripts[scriptId];
+  const scriptState = editorScripts[scriptId];
+  const metadata = dashboardScripts.find((s) => s.id === scriptId);
 
   if (!scriptState) return null;
 
@@ -88,10 +91,13 @@ export function ExportModal({
       return;
     }
 
-    const fountainText = generateFountain(
-      scriptState.blocks,
-      scriptTitle || "Untitled",
-    );
+    const fountainText = generateFountain(scriptState.blocks, {
+      title: metadata?.title || scriptTitle || "Untitled",
+      author: metadata?.author,
+      based_on: metadata?.based_on,
+      contact_info: metadata?.contact_info,
+      status: metadata?.status,
+    });
     console.log("Generated Fountain Text Length:", fountainText.length);
     const blob = new Blob([fountainText], { type: "text/plain" });
     const url = URL.createObjectURL(blob);

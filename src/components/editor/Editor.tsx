@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { useScriptsStore } from "@/store/scripts";
 import { useEditorStore } from "@/store/editor";
 import { EditorBlock } from "./EditorBlock";
-import { BlockType } from "@/lib/editor-types";
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
 import { KeyboardShortcutsModal } from "./KeyboardShortcutsModal";
 import { ExportModal } from "./ExportModal";
 import { EditorHeader } from "./EditorHeader";
+import { ProjectSidebar } from "./ProjectSidebar";
+import { MobileFormattingDock } from "./MobileFormattingDock";
 import dynamic from "next/dynamic";
 
 const PrintContainer = dynamic(
@@ -40,69 +40,45 @@ export function Editor({ scriptId }: EditorProps) {
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
   const activeBlock = scriptState?.blocks?.find((b) => b.id === activeBlockId);
 
-  // Reset active block if it no longer exists in the current script (safety for imports/deletes)
+  const [isFocusMode, setIsFocusMode] = useState(false);
+  const [isNavOpen, setIsNavOpen] = useState(true);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [isPrintReady, setIsPrintReady] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+
   useEffect(() => {
     if (scriptState?.blocks && activeBlockId) {
       const exists = scriptState.blocks.some((b) => b.id === activeBlockId);
       if (!exists) setActiveBlockId(null);
     }
   }, [scriptState?.blocks, activeBlockId]);
-  const [isFocusMode, setIsFocusMode] = useState(false);
-  const [isNavOpen, setIsNavOpen] = useState(true);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
-  const [isPrintReady, setIsPrintReady] = useState(false);
-  const [isExportOpen, setIsExportOpen] = useState(false);
-
-  // Detect mobile keyboard
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.visualViewport) return;
-
-    const handleResize = () => {
-      const isVisible =
-        window.visualViewport!.height < window.innerHeight - 150;
-      setIsKeyboardVisible(isVisible);
-    };
-
-    window.visualViewport.addEventListener("resize", handleResize);
-    return () =>
-      window.visualViewport?.removeEventListener("resize", handleResize);
-  }, []);
 
   useEffect(() => {
     initializeScript(scriptId);
   }, [scriptId, initializeScript]);
 
-  // Mobile Auto-Close Navigator
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth < 1280) {
       setIsNavOpen(false);
     }
   }, []);
 
-  // Undo / Redo Global Keybinds
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // Cmd/Ctrl + Z
       if ((e.metaKey || e.ctrlKey) && e.key === "z") {
         e.preventDefault();
-        if (e.shiftKey) {
-          redo(scriptId);
-        } else {
-          undo(scriptId);
-        }
+        if (e.shiftKey) redo(scriptId);
+        else undo(scriptId);
       }
     };
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
   }, [scriptId, undo, redo]);
 
-  // Typewriter Scrolling
   useEffect(() => {
     if (isFocusMode && activeBlockId) {
       const el = document.getElementById(`block-${activeBlockId}`);
       if (el) {
-        // Delay slightly for dom render
         setTimeout(() => {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
         }, 50);
@@ -110,66 +86,33 @@ export function Editor({ scriptId }: EditorProps) {
     }
   }, [activeBlockId, isFocusMode]);
 
-  if (!scriptState)
-    return <div className="p-8 text-center">Loading editor...</div>;
+  if (!scriptState) return <div className="p-8 text-center bg-zinc-50 dark:bg-zinc-950/80 backdrop-blur-3xl m-8 rounded-[2rem] border-2 border-dashed border-black/5 flex flex-col items-center justify-center min-h-[40vh] text-zinc-400 font-brand uppercase tracking-widest text-[10px]">Loading Editor...</div>;
 
-  const handleKeyDown = (
-    e: React.KeyboardEvent<HTMLTextAreaElement>,
-    id: string,
-    index: number,
-  ) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>, id: string, index: number) => {
     const textarea = e.currentTarget;
     const content = textarea.value;
 
-    // Shift + Enter -> Allow multiline for certain blocks (like action)
-    if (e.key === "Enter" && e.shiftKey) {
-      return;
-    }
-
-    // Enter -> Add new block below
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       const newBlockId = addBlock(scriptId, index);
       requestAnimationFrame(() => setActiveBlockId(newBlockId));
     }
-
-    // Tab -> Cycle block type (Shift+Tab to reverse)
     if (e.key === "Tab") {
       e.preventDefault();
       cycleBlockType(scriptId, id, e.shiftKey);
     }
-
-    // Backspace -> Delete block if empty (except very first block)
-    if (e.key === "Backspace" && content === "") {
-      if (scriptState.blocks.length > 1) {
-        e.preventDefault();
-        deleteBlock(scriptId, id);
-
-        // Focus previous block
-        if (index > 0) {
-          const prevBlock = scriptState.blocks[index - 1];
-          setActiveBlockId(prevBlock.id);
-        }
-      }
+    if (e.key === "Backspace" && content === "" && scriptState.blocks.length > 1) {
+      e.preventDefault();
+      deleteBlock(scriptId, id);
+      if (index > 0) setActiveBlockId(scriptState.blocks[index - 1].id);
     }
-
-    // Up/Down Arrows -> Navigate between blocks
-    if (e.key === "ArrowUp") {
-      if (textarea.selectionStart === 0 && index > 0) {
-        e.preventDefault();
-        const prevBlock = scriptState.blocks[index - 1];
-        setActiveBlockId(prevBlock.id);
-      }
+    if (e.key === "ArrowUp" && textarea.selectionStart === 0 && index > 0) {
+      e.preventDefault();
+      setActiveBlockId(scriptState.blocks[index - 1].id);
     }
-    if (e.key === "ArrowDown") {
-      if (
-        textarea.selectionEnd === content.length &&
-        index < scriptState.blocks.length - 1
-      ) {
-        e.preventDefault();
-        const nextBlock = scriptState.blocks[index + 1];
-        setActiveBlockId(nextBlock.id);
-      }
+    if (e.key === "ArrowDown" && textarea.selectionEnd === content.length && index < scriptState.blocks.length - 1) {
+      e.preventDefault();
+      setActiveBlockId(scriptState.blocks[index + 1].id);
     }
   };
 
@@ -178,54 +121,21 @@ export function Editor({ scriptId }: EditorProps) {
     e.dataTransfer.effectAllowed = "move";
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropId: string) => {
     e.preventDefault();
     const draggedId = e.dataTransfer.getData("text/plain");
-    if (draggedId && draggedId !== dropId) {
-      moveBlock(scriptId, draggedId, dropId);
-    }
+    if (draggedId && draggedId !== dropId) moveBlock(scriptId, draggedId, dropId);
   };
 
-  // Ensure scriptState and blocks exist
-  if (!scriptState || !Array.isArray(scriptState.blocks)) {
-    return (
-      <div className="p-8 text-center bg-zinc-50 dark:bg-zinc-950 rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800">
-        <p className="text-sm font-brand uppercase tracking-widest text-zinc-400">
-          Script Not Found or Initializing...
-        </p>
-      </div>
-    );
-  }
-
+  // Scene Mapping Logic
   let sceneCounter = 0;
   const scenesList: { id: string; num: number; content: string }[] = [];
-
-  // Defensive mapping to handle potentially malformed imported data
-  const blocksWithScenes = scriptState.blocks.map((block, index) => {
-    if (!block || typeof block !== 'object') {
-      return { id: 'error-' + index, type: 'action' as const, content: 'Malformed block data', sceneNumber: undefined };
-    }
-    
-    const safeBlock = {
-      id: block.id || Math.random().toString(36).substr(2, 9),
-      type: (block.type as BlockType) || ('action' as const),
-      content: block.content || '',
-    };
-
+  const blocksWithScenes = scriptState.blocks.map((block) => {
+    const safeBlock = { id: block.id, type: block.type, content: block.content || "" };
     if (safeBlock.type === "scene_heading") {
       sceneCounter++;
-      const sNum = sceneCounter;
-      scenesList.push({
-        id: safeBlock.id,
-        num: sNum,
-        content: safeBlock.content,
-      });
-      return { ...safeBlock, sceneNumber: sNum };
+      scenesList.push({ id: safeBlock.id, num: sceneCounter, content: safeBlock.content });
+      return { ...safeBlock, sceneNumber: sceneCounter };
     }
     return { ...safeBlock, sceneNumber: undefined };
   });
@@ -233,12 +143,7 @@ export function Editor({ scriptId }: EditorProps) {
   const currentScript = dashboardScripts.find((s) => s.id === scriptId);
 
   return (
-    <div
-      className={cn(
-        "relative min-h-[calc(100vh-8rem)] transition-colors duration-500",
-        isPrintReady && "print-ready-mode",
-      )}
-    >
+    <div className={cn("relative min-h-[calc(100vh-8rem)] transition-colors duration-500", isPrintReady && "print-ready-mode")}>
       <EditorHeader
         scriptId={scriptId}
         isNavOpen={isNavOpen}
@@ -251,113 +156,28 @@ export function Editor({ scriptId }: EditorProps) {
         setIsExportOpen={setIsExportOpen}
       />
 
-      {/* Backdrop Overlay for Mobile */}
       <div
         onClick={() => setIsNavOpen(false)}
-        className={cn(
-          "fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-500",
-          isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none",
-        )}
+        className={cn("fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-500", isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none")}
       />
 
-      {/* Main Structural Content - Split from Flex to fix Chrome positioning */}
       <div className="flex flex-col lg:flex-row items-start justify-center pt-24 lg:pt-32 px-4 lg:px-8">
-        <div
-          id="scene-navigator"
-          className={cn(
-            "z-40 shrink-0 overflow-y-auto overflow-x-hidden bg-background/95 lg:bg-background/30 backdrop-blur-3xl border-r lg:border border-white/10 lg:rounded-[2.5rem] shadow-2xl transition-all duration-500 print:hidden",
+        <ProjectSidebar
+          scriptId={scriptId}
+          isNavOpen={isNavOpen}
+          setIsNavOpen={setIsNavOpen}
+          scenesList={scenesList}
+          activeBlockId={activeBlockId}
+          setActiveBlockId={setActiveBlockId}
+        />
 
-            // Layout Geometry
-            "fixed top-24 sm:top-28 left-2 w-[calc(94vw-16px)] max-w-[420px] h-fit max-h-[75vh] p-4 sm:p-6 rounded-3xl lg:sticky lg:top-32 lg:w-72 lg:h-[calc(100vh-12rem)] lg:mr-8 lg:mt-0 lg:pt-6 lg:pb-6 lg:ml-0 lg:left-0 lg:rounded-[2.5rem]",
-
-            // Open/Close States
-            isNavOpen
-              ? "translate-x-0 opacity-100"
-              : "-translate-x-[120%] lg:-translate-x-[150%] lg:w-0 lg:p-0 lg:m-0 opacity-0 pointer-events-none",
-          )}
-        >
-          <div className="flex items-center justify-between mb-4 lg:mb-6 px-2">
-            <h3 className="font-semibold text-[10px] lg:text-xs uppercase tracking-[0.2em] text-[#136f63]/60">
-              Scenes
-            </h3>
-            <button
-              onClick={() => setIsNavOpen(false)}
-              className="lg:hidden p-2 -mr-2 rounded-full hover:bg-black/5 text-[#136f63]"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="space-y-1">
-            {scenesList.map((scene) => (
-              <button
-                key={scene.id}
-                onClick={() => {
-                  document
-                    .getElementById(`block-${scene.id}`)
-                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                  setActiveBlockId(scene.id);
-                  if (window.innerWidth < 1024) setIsNavOpen(false);
-                }}
-                className={cn(
-                  "w-full text-left px-3 py-2.5 lg:py-1.5 rounded-xl lg:rounded-md text-[13px] font-medium transition-all group/scene animate-in fade-in slide-in-from-left-2",
-                  activeBlockId === scene.id
-                    ? "bg-[#136f63] text-white font-bold shadow-lg shadow-[#136f63]/20 scale-[1.02]"
-                    : "text-zinc-500 hover:bg-[#136f63]/5 hover:text-[#136f63]",
-                )}
-              >
-                <span
-                  className={cn(
-                    "font-mono text-[10px] mr-2",
-                    activeBlockId === scene.id
-                      ? "text-white/70"
-                      : "text-[#136f63]/50",
-                  )}
-                >
-                  {scene.num}
-                </span>
-                <span className="whitespace-normal leading-tight">
-                  {(scene.content || "Untitled Scene").toUpperCase()}
-                </span>
-              </button>
+        <div className={cn("w-full max-w-[850px] mb-32 shrink print:max-w-none print:m-0 print:p-0 print:w-full", isFocusMode ? "mt-6" : "mt-8 lg:mt-0")}>
+          <div id="script-editor-canvas" className="space-y-0 relative bg-white dark:bg-zinc-900 border border-border rounded-sm shadow-[0_10px_50px_rgba(0,0,0,0.04)] py-8 sm:py-12 lg:py-24 px-4 sm:px-12 lg:px-[100px] print:p-0 print:m-0 print:border-none print:shadow-none print:bg-white print:text-black print:min-h-0 editor-page-strip overflow-x-hidden sm:overflow-x-visible">
+            {/* Page Break Annotations */}
+            {Array.from({ length: Math.max(1, Math.ceil((blocksWithScenes.length * 60) / 1056)) }).map((_, i) => (
+              <div key={i + 1} className="editor-page-strip-label print:hidden" style={{ top: `${(i + 1) * 1056}px` }}>PAGE {i + 1}</div>
             ))}
-            {scenesList.length === 0 && (
-              <div className="text-xs text-zinc-400 px-2 italic">
-                No scenes yet.
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Editor Main Canvas */}
-        <div
-          className={cn(
-            "w-full max-w-[850px] mb-32 shrink",
-            "print:max-w-none print:m-0 print:p-0 print:w-full",
-            isFocusMode ? "mt-6" : "mt-8 lg:mt-0",
-          )}
-        >
-          <div
-            id="script-editor-canvas"
-            className={cn(
-              "space-y-0 relative bg-white dark:bg-zinc-900 border border-border rounded-sm shadow-[0_10px_50px_rgba(0,0,0,0.04)] py-8 sm:py-12 lg:py-24 px-4 sm:px-12 lg:px-[100px] print:p-0 print:m-0 print:border-none print:shadow-none print:bg-white print:text-black print:min-h-0",
-              "editor-page-strip overflow-x-hidden sm:overflow-x-visible",
-            )}
-          >
-            {/* Page Break Labels */}
-            {Array.from({
-              length: Math.max(
-                1,
-                Math.ceil((blocksWithScenes.length * 60) / 1056),
-              ),
-            }).map((_, i) => (
-              <div
-                key={i + 1}
-                className="editor-page-strip-label print:hidden"
-                style={{ top: `${(i + 1) * 1056}px` }}
-              >
-                PAGE {i + 1}
-              </div>
-            ))}
             {blocksWithScenes.map((block, index) => (
               <EditorBlock
                 key={block.id}
@@ -371,7 +191,7 @@ export function Editor({ scriptId }: EditorProps) {
                 onKeyDown={handleKeyDown}
                 onFocus={() => setActiveBlockId(block.id)}
                 onDragStart={(e, id) => handleDragStart(e, id)}
-                onDragOver={(e) => handleDragOver(e)}
+                onDragOver={(e) => e.preventDefault()}
                 onDrop={(e, id) => handleDrop(e, id)}
               />
             ))}
@@ -379,73 +199,28 @@ export function Editor({ scriptId }: EditorProps) {
         </div>
       </div>
 
-      {/* Keyboard Shortcuts Dialog */}
-      <KeyboardShortcutsModal
-        isOpen={isShortcutsOpen}
-        onOpenChange={setIsShortcutsOpen}
-      />
-
-      {/* Export / Import Modal */}
-      <ExportModal
-        isOpen={isExportOpen}
-        onOpenChange={setIsExportOpen}
+      <KeyboardShortcutsModal isOpen={isShortcutsOpen} onOpenChange={setIsShortcutsOpen} />
+      <ExportModal isOpen={isExportOpen} onOpenChange={setIsExportOpen} scriptId={scriptId} scriptTitle={currentScript?.title} />
+      
+      <MobileFormattingDock
         scriptId={scriptId}
-        scriptTitle={currentScript?.title}
+        activeBlockId={activeBlockId}
+        activeBlockType={activeBlock?.type}
+        changeBlockType={changeBlockType}
       />
 
-      {/* Mobile Formatting Dock - Bold brutalist editorial design */}
-      <div
-        style={{
-          bottom:
-            typeof window !== "undefined" && window.visualViewport
-              ? Math.max(0, window.innerHeight - window.visualViewport.height)
-              : 0,
-        }}
-        className={cn(
-          "fixed left-0 right-0 w-full z-50 bg-[#191919] border-t border-[#136F63]/30 pt-3 pb-8 sm:hidden shadow-[0_-20px_40px_rgba(0,0,0,0.5)] transition-all duration-300 print:hidden",
-          isKeyboardVisible && "pb-4", // Reduce padding when keyboard is up for more screen space
-        )}
-      >
-        <div className="flex items-center overflow-x-auto hide-scrollbar snap-x">
-          {[
-            { label: "SCENE", type: "scene_heading" },
-            { label: "ACTION", type: "action" },
-            { label: "CHARACTER", type: "character" },
-            { label: "DIALOGUE", type: "dialogue" },
-            { label: "PARENTHETICAL", type: "parenthetical" },
-            { label: "TRANSITION", type: "transition" },
-            { label: "SHOT", type: "shot" },
-          ].map((fmt) => (
-            <button
-              key={fmt.type}
-              onClick={() => {
-                if (activeBlockId) {
-                  changeBlockType(
-                    scriptId,
-                    activeBlockId,
-                    fmt.type as BlockType,
-                  );
-                  // Ensure focus is retained after changing type by finding textarea
-                  const el = document.getElementById(`block-${activeBlockId}`);
-                  const textarea = el?.querySelector("textarea");
-                  textarea?.focus({ preventScroll: true });
-                }
-              }}
-              className={cn(
-                "snap-start shrink-0 px-5 py-3 text-[10px] font-brand uppercase tracking-[0.3em] border-r border-white/10 last:border-r-0 transition-all duration-300",
-                activeBlock?.type === fmt.type
-                  ? "bg-[#136F63] text-[#F3EFE0] font-black shadow-[inset_0_-2px_0_#F3EFE0]"
-                  : "bg-transparent text-white/50 hover:text-white hover:bg-white/5",
-              )}
-            >
-              {fmt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Hidden Print-Specific Container */}
-      {scriptState.blocks && <PrintContainer blocks={scriptState.blocks} />}
+      {scriptState.blocks && (
+        <PrintContainer
+          blocks={scriptState.blocks}
+          metadata={currentScript ? {
+            title: currentScript.title,
+            author: currentScript.author,
+            based_on: currentScript.based_on,
+            contact_info: currentScript.contact_info,
+            status: currentScript.status,
+          } : undefined}
+        />
+      )}
     </div>
   );
 }

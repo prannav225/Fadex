@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowRight, Box, CloudOff, Sparkles } from "lucide-react";
+import { ArrowRight, Box, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "./ui/badge";
 
@@ -77,19 +77,19 @@ export function LandingPage() {
         <div className="mt-12 lg:mt-16 w-full grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 max-w-5xl">
           {[
             {
-              icon: <CloudOff />,
-              title: "Honest MVP",
-              desc: "Stored locally in your browser. No databases yet, just instant, secure writing.",
+              icon: <Sparkles />,
+              title: "Cinematic Suite",
+              desc: "Pure, distraction-free drafting with industry-standard courier precision and real-time page tracking.",
             },
             {
               icon: <Box />,
-              title: "Roadmap",
-              desc: "Collaborative cloud syncing and robust production databases are coming next.",
+              title: "Standard Interchange",
+              desc: "Professional Fountain 1.1 support. Import, draft, and export to studio-ready formats instantly.",
             },
             {
-              icon: <Sparkles />,
-              title: "Future",
-              desc: "AI-assisted storyboarding and professional character tracking in development.",
+              icon: <ArrowRight />,
+              title: "The Roadmap",
+              desc: "Collaborative cloud syncing and automated production breakdowns are coming in the next release.",
             },
           ].map((item, i) => (
             <div

@@ -243,6 +243,60 @@
     text-transform: uppercase !important;
   }
 
+  /* Title Page */
+  .print-title-page {
+    height: 9.5in !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    page-break-after: always !important;
+    padding-bottom: 2in !important;
+  }
+
+  .print-title-main {
+    font-size: 14pt !important;
+    font-weight: bold !important;
+    text-decoration: underline !important;
+    text-transform: uppercase !important;
+    margin-bottom: 24pt !important;
+  }
+
+  .print-title-sub {
+    font-size: 12pt !important;
+    margin-bottom: 6pt !important;
+  }
+
+  .print-title-author {
+    font-size: 14pt !important;
+    margin-bottom: 48pt !important;
+  }
+
+  .print-title-notes {
+    font-size: 12pt !important;
+    font-style: italic !important;
+    margin-top: 12pt !important;
+  }
+
+  .print-title-status {
+    position: absolute !important;
+    left: 0 !important;
+    bottom: 1.5in !important;
+    font-size: 10pt !important;
+    text-transform: uppercase !important;
+  }
+
+  .print-title-contact {
+    position: absolute !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    text-align: left !important;
+    width: 3in !important;
+    font-size: 11pt !important;
+    white-space: pre-wrap !important;
+  }
+
   /* Global typography override for all print descendants */
   #fadex-print-container * {
     font-family: inherit !important;
