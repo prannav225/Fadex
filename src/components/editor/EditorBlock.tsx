@@ -27,6 +27,8 @@ interface EditorBlockProps {
   onDrop?: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
 }
 
+import { renderFountainText } from "@/lib/fountain-renderer";
+
 export function EditorBlock({
   block,
   isActive,
@@ -64,15 +66,15 @@ export function EditorBlock({
   };
 
   const handleKeyDownWrapper = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Markdown-style Formatting (Cmd/Ctrl + B, I, U)
-    if ((e.metaKey || e.ctrlKey) && (e.key === "b" || e.key === "i" || e.key === "u")) {
+    const key = e.key.toLowerCase();
+    if ((e.metaKey || e.ctrlKey) && (key === "b" || key === "i" || key === "u")) {
       e.preventDefault();
       const textarea = e.currentTarget;
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       if (start === end) return;
 
-      const char = e.key === "b" ? "**" : e.key === "i" ? "*" : "_";
+      const char = key === "b" ? "**" : key === "i" ? "*" : "_";
       const selectedText = block.content.substring(start, end);
       const newContent =
         block.content.substring(0, start) +
@@ -85,7 +87,10 @@ export function EditorBlock({
 
       requestAnimationFrame(() => {
         if (textareaRef.current) {
-          textareaRef.current.setSelectionRange(start + char.length, end + char.length);
+          textareaRef.current.setSelectionRange(
+            start + char.length,
+            end + char.length,
+          );
         }
       });
       return;
@@ -186,7 +191,7 @@ export function EditorBlock({
           `print-${block.type}`,
         )}
       >
-        {block.content || "\u00A0"}
+        {renderFountainText(block.content || "")}
       </div>
 
       {/* Suggestion Dropdown */}

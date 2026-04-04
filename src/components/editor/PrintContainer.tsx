@@ -15,6 +15,8 @@ interface PrintContainerProps {
   };
 }
 
+import { renderFountainText } from "@/lib/fountain-renderer";
+
 export function PrintContainer({ blocks, metadata }: PrintContainerProps) {
   // Use dynamic import { ssr: false } in Editor.tsx for this component
   return createPortal(
@@ -25,12 +27,14 @@ export function PrintContainer({ blocks, metadata }: PrintContainerProps) {
           <div className="print-title-top-shim" />
           <div className="print-title-main">{metadata.title.toUpperCase()}</div>
           <div className="print-title-sub">written by</div>
-          <div className="print-title-author">{metadata.author || "Unknown Author"}</div>
-          
+          <div className="print-title-author">
+            {metadata.author || "Unknown Author"}
+          </div>
+
           {metadata.based_on && (
             <div className="print-title-notes">{metadata.based_on}</div>
           )}
-          
+
           {metadata.status && (
             <div className="print-title-status">{metadata.status}</div>
           )}
@@ -53,13 +57,13 @@ export function PrintContainer({ blocks, metadata }: PrintContainerProps) {
             block.type === "dialogue" && "print-dialogue",
             block.type === "parenthetical" && "print-parenthetical",
             block.type === "transition" && "print-transition",
-            block.type === "shot" && "print-shot"
+            block.type === "shot" && "print-shot",
           )}
         >
-          {block.content || "\u00A0"}
+          {renderFountainText(block.content || "")}
         </div>
       ))}
     </div>,
-    document.body
+    document.body,
   );
 }
