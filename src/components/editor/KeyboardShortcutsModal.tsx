@@ -111,7 +111,7 @@ export function KeyboardShortcutsModal({
                   </span>
                   <div className="flex items-center gap-1.5 font-mono text-[10px] sm:text-xs font-bold text-zinc-400">
                     <kbd className="px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 shadow-sm">
-                      CMD
+                      CMD/Ctrl
                     </kbd>
                     <span>+</span>
                     <kbd className="px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 shadow-sm">
@@ -125,7 +125,7 @@ export function KeyboardShortcutsModal({
                   </span>
                   <div className="flex items-center gap-1.5 font-mono text-[10px] sm:text-xs font-bold text-zinc-400">
                     <kbd className="px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 shadow-sm">
-                      CMD
+                      CMD/Ctrl
                     </kbd>
                     <span>+</span>
                     <kbd className="px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 shadow-sm">
@@ -139,7 +139,7 @@ export function KeyboardShortcutsModal({
                   </span>
                   <div className="flex items-center gap-1.5 font-mono text-[10px] sm:text-xs font-bold text-zinc-400">
                     <kbd className="px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 shadow-sm">
-                      CMD
+                      CMD/Ctrl
                     </kbd>
                     <span>+</span>
                     <kbd className="px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 shadow-sm">
