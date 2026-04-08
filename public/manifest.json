@@ -1,0 +1,26 @@
+{
+  "name": "FadeX Screenwriting",
+  "short_name": "FadeX",
+  "description": "A minimalist, premium screenplay editor built for storytellers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#136F63",
+  "orientation": "any",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "creative", "entertainment"]
+}

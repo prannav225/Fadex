@@ -13,26 +13,33 @@ FADEX is a premium, distraction-free screenwriting workspace designed to keep yo
 ## Core Features
 
 ### 1. Professional Fountain Interchange
+
 FadeX utilizes the industry-standard **Fountain 1.1** formatting language, ensuring 100% interoperability with tools like **WriterDuet**, **Celtx**, **Fade In**, and **Final Draft**.
+
 - **Instant Import/Export**: Drop any `.fountain` file to resume writing instantly.
 - **Zero Lock-in**: Your stories remain in pure text, accessible on any device, forever.
 - **Studio-Ready PDF**: A high-fidelity print engine that generates perfect screenplays with one click.
 
 ### 2. Cinematic Drafting Engine
-A minimalist, zero-lag editing environment focused on the craft of storytelling.
-- **Smart Logic**: Intelligent context-aware transitions (e.g., Character -> Dialogue, Scene Heading -> Action).
-- **Courier Precision**: Native **Courier Prime** canvas with sub-pixel precise margins and automatic parenthetical wrapping.
-- **Dynamic Outline**: A modular scene navigator that allows for high-speed drag-and-drop structural reorganization.
 
-### 3. High-Fidelity Project Registry
-Manage your entire slate with a refined, list-based dashboard optimized for clarity and speed.
-- **Deep Metadata**: Track project **Status**, **Genre**, **Logline**, and **Title Page** info in a unified studio interface.
-- **Character Analytics**: Automatic extraction and line-counting for every role in your script.
-- **Responsive Geometry**: A "liquid" layout architecture that scales from the smallest phone to the largest cinematic display.
+A minimalist, zero-lag editing environment focused on the craft of storytelling.
+
+- **Intelligent Pagination**: A dual-mode layout engine providing **Soft Pagination** for lag-free mobile drafting and **Strict Page Mode** (45-line studio standard) for final exports.
+- **Smart Logic**: Context-aware transitions (e.g., Character -> Dialogue) and **Idle-State Normalization** that automatically corrects page formatting when you pause.
+- **Courier Precision**: Native **Courier Prime** canvas with sub-pixel precise margins and automatic industry-standard parenthetical wrapping.
+
+### 3. Professional Mobility & Geometry
+
+A high-fidelity drafting experience that adapts flawlessly to every device.
+
+- **Dynamic Scaling Engine**: A CSS-based transform architecture that fits full 8.5x11 screenplays into smartphone screens while preserving monospaced geometry.
+- **Mobile Formatting Dock**: A high-speed, touch-optimized toolbelt for quick block transformations on the go.
+- **Modular Outline**: A high-speed scene navigator with drag-and-drop structural reorganization for mapping your story beats.
 
 ### 4. Private & Secure
-- **Local-First Architecture**: Your scripts never leave your browser. FadeX uses high-performance Zustand persistence for zero-lag auto-saving and instant local recovery.
-- **Privacy by Design**: No external databases, no tracking, just pure, secure screenwriting.
+
+- **Local-First Architecture**: Your scripts never leave your browser. FadeX uses high-performance Zustand persistence for zero-lag auto-saving and encryption-ready local recovery.
+- **Privacy by Design**: No external databases, no cloud tracking—just pure, high-performance screenwriting.
 
 ---
 
@@ -47,4 +54,5 @@ Manage your entire slate with a refined, list-based dashboard optimized for clar
 ---
 
 ## Built for the Craft.
+
 © 2026 FADEX SCREENWRITING.

@@ -40,9 +40,9 @@ export function ProjectSidebar({
       id="scene-navigator"
       className={cn(
         "z-40 shrink-0 overflow-y-auto overflow-x-hidden bg-background dark:bg-zinc-950/80 backdrop-blur-3xl border-r lg:border border-black/8 shadow-2xl transition-all duration-500 print:hidden",
-        "fixed top-24 sm:top-28 left-2 w-[calc(94vw-16px)] max-w-[420px] h-fit lg:h-[calc(100vh-12rem)] max-h-[75vh] lg:max-h-none p-0 rounded-lg lg:sticky lg:top-32 lg:w-80 lg:mr-8 lg:mt-0 lg:ml-0 lg:left-0",
+        "fixed top-24 sm:top-28 left-2 w-[calc(94vw-16px)] max-w-[420px] h-fit lg:h-[calc(100vh-14rem)] max-h-[75vh] lg:max-h-none p-0 rounded-2xl lg:sticky lg:top-36 lg:w-80 lg:mr-10 lg:ml-10 lg:left-10",
         isNavOpen
-          ? "translate-x-0 opacity-100"
+          ? "translate-x-0 opacity-100 shadow-2xl ring-1 ring-black/5"
           : "-translate-x-[120%] lg:-translate-x-[150%] lg:w-0 lg:p-0 lg:m-0 opacity-0 pointer-events-none",
       )}
     >

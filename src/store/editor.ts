@@ -5,6 +5,7 @@ import {
   BlockType,
   getNextBlockType,
   getSmartNextBlockType,
+  detectType,
 } from "@/lib/editor-types";
 import { generateId } from "@/lib/uuid";
 
@@ -28,7 +29,11 @@ interface EditorState {
   cycleBlockType: (scriptId: string, id: string, reverse: boolean) => void;
   deleteBlock: (scriptId: string, id: string) => void;
   moveBlock: (scriptId: string, draggedId: string, dropId: string) => void;
-  moveScene: (scriptId: string, sceneId: string, targetSceneId: string | null) => void;
+  moveScene: (
+    scriptId: string,
+    sceneId: string,
+    targetSceneId: string | null,
+  ) => void;
   searchAndReplace: (
     scriptId: string,
     search: string,
@@ -55,7 +60,11 @@ export const useEditorStore = create<EditorState>()(
       initializeScript: (scriptId) => {
         const { scripts } = get();
         // Only initialize if there is truly no data for this script to prevent overwriting imports
-        if (!scripts[scriptId] || !scripts[scriptId].blocks || scripts[scriptId].blocks.length === 0) {
+        if (
+          !scripts[scriptId] ||
+          !scripts[scriptId].blocks ||
+          scripts[scriptId].blocks.length === 0
+        ) {
           set({
             scripts: {
               ...scripts,
@@ -117,9 +126,13 @@ export const useEditorStore = create<EditorState>()(
           const scriptState = state.scripts[scriptId];
           if (!scriptState) return state;
 
-          const newBlocks = scriptState.blocks.map((b) =>
-            b.id === id ? { ...b, content } : b,
-          );
+          const newBlocks = scriptState.blocks.map((b) => {
+            if (b.id === id) {
+              const newType = detectType(content, b.type);
+              return { ...b, content, type: newType };
+            }
+            return b;
+          });
 
           return {
             scripts: {
@@ -227,21 +240,24 @@ export const useEditorStore = create<EditorState>()(
           if (!scriptState) return state;
 
           const blocks = [...scriptState.blocks];
-          
+
           // Identify the blocks of the scene to move
-          const startIndex = blocks.findIndex(b => b.id === sceneId);
+          const startIndex = blocks.findIndex((b) => b.id === sceneId);
           if (startIndex === -1) return state;
-          
+
           let endIndex = startIndex + 1;
-          while (endIndex < blocks.length && blocks[endIndex].type !== 'scene_heading') {
+          while (
+            endIndex < blocks.length &&
+            blocks[endIndex].type !== "scene_heading"
+          ) {
             endIndex++;
           }
-          
+
           const sceneBlocks = blocks.splice(startIndex, endIndex - startIndex);
-          
+
           // Re-find the target index since the array has changed
-          const targetIndex = targetSceneId 
-            ? blocks.findIndex(b => b.id === targetSceneId)
+          const targetIndex = targetSceneId
+            ? blocks.findIndex((b) => b.id === targetSceneId)
             : blocks.length;
 
           if (targetIndex !== -1) {
@@ -269,11 +285,14 @@ export const useEditorStore = create<EditorState>()(
           if (!scriptState) return state;
 
           const flags = caseSensitive ? "g" : "gi";
-          const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+          const regex = new RegExp(
+            search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+            flags,
+          );
 
-          const newBlocks = scriptState.blocks.map(b => ({
+          const newBlocks = scriptState.blocks.map((b) => ({
             ...b,
-            content: b.content.replace(regex, replace)
+            content: b.content.replace(regex, replace),
           }));
 
           return {
@@ -341,7 +360,7 @@ export const useEditorStore = create<EditorState>()(
       setScriptBlocks: (scriptId: string, blocks: ScreenplayBlock[]) =>
         set((state) => {
           const scriptState = state.scripts[scriptId];
-          
+
           return {
             scripts: {
               ...state.scripts,

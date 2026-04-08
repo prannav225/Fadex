@@ -110,6 +110,11 @@ export function Dashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Reset the input value immediately so the same file can be picked again,
+    // and to prevent browsers from attempting to restore the filename value 
+    // during navigation, which triggers the InvalidStateError.
+    const inputElement = e.target;
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target?.result as string;
@@ -118,6 +123,10 @@ export function Dashboard() {
         const blocks = parseFountain(text);
         const newId = addScript(title);
         setScriptBlocks(newId, blocks);
+        
+        // Final reset for safety before navigation
+        inputElement.value = "";
+        
         router.push(`/editor/${newId}`);
       }
     };

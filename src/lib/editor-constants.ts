@@ -1,21 +1,18 @@
 export const BLOCK_STYLES: Record<string, string> = {
-  scene_heading:
-    "uppercase font-bold w-full text-foreground/90 mt-5 sm:mt-8 mb-2 sm:mb-4 tracking-wide text-xs sm:text-base drop-shadow-sm border-l-2 sm:border-l-4 border-primary/40 pl-3 sm:pl-4",
-  action:
-    "w-full text-foreground/80 mt-1.5 sm:mt-2 mb-1.5 sm:mb-2 leading-relaxed",
+  scene_heading: "uppercase font-bold w-full mt-8 mb-4 tracking-normal",
+  action: "w-full mt-4 mb-4",
   character:
-    "uppercase w-full text-center sm:w-fit sm:mx-auto sm:min-w-[40%] text-primary font-bold mt-4 sm:mt-6 tracking-wide",
+    "uppercase w-full sm:w-auto mt-4 mb-0 sm:pl-[22ch] sm:text-left text-center font-normal",
   dialogue:
-    "w-[92%] mx-auto sm:w-[65%] sm:mx-0 sm:ml-[15%] text-black dark:text-zinc-200",
+    "w-full sm:w-[33ch] mt-0 mb-4 sm:ml-[10ch] text-center sm:text-left mx-auto sm:mx-0",
   parenthetical:
-    "italic text-center w-[85%] mx-auto sm:w-[50%] sm:mx-0 sm:ml-[25%] sm:text-left text-black dark:text-zinc-200 mt-1 mb-1",
-  transition:
-    "uppercase text-right w-full text-black dark:text-white mt-3 sm:mt-4",
-  shot: "uppercase font-bold w-full text-black dark:text-white mt-3 sm:mt-4",
+    "mt-0 mb-0 sm:ml-[16ch] sm:w-[25ch] text-center sm:text-left mx-auto sm:mx-0",
+  transition: "uppercase text-right w-full mt-8 mb-4",
+  shot: "uppercase font-bold w-full mt-8 mb-4",
   montage:
-    "uppercase font-bold w-full text-zinc-600 dark:text-zinc-400 mt-3 sm:mt-4",
+    "uppercase font-bold w-full text-zinc-600 dark:text-zinc-400 mt-8 mb-4",
   text_on_screen:
-    "italic w-[92%] mx-auto sm:w-[65%] sm:mx-0 sm:ml-[15%] text-black dark:text-zinc-200",
+    "italic w-full sm:w-[33ch] mt-4 mb-4 sm:ml-[10ch] text-center sm:text-left mx-auto sm:mx-0",
 };
 
 export function getStylesForType(type: string) {

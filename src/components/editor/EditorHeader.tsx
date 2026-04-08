@@ -48,7 +48,7 @@ export function EditorHeader({
   const canRedo = scriptData?.future?.length > 0;
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-[64px] lg:h-[80px] bg-[#F9F7F2]/95 dark:bg-[#121212]/95 backdrop-blur-[20px] border-b border-zinc-200 dark:border-white/5 z-50 transition-all duration-500 flex items-center px-2 lg:px-8 justify-between shadow-[0_2px_15px_-4px_rgba(0,0,0,0.05)]">
+    <header className="fixed top-0 left-0 right-0 h-[64px] lg:h-[80px] bg-white/95 dark:bg-zinc-900/95 sm:bg-[#F9F7F2]/95 sm:dark:bg-[#121212]/95 backdrop-blur-[20px] border-b border-zinc-200 dark:border-white/5 z-50 transition-all duration-500 flex items-center px-2 lg:px-8 justify-between shadow-[0_2px_15px_-4px_rgba(0,0,0,0.05)]">
       {/* Left Area: Navigation and History */}
       <div className="flex items-center gap-2 lg:gap-6">
         <Link href="/dashboard">

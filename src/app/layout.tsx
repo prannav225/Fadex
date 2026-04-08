@@ -7,6 +7,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { PWAHandler } from "@/components/editor/PWAHandler";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -34,7 +35,16 @@ export const metadata: Metadata = {
   title: "FADEX | The Lightning Screenplay Editor",
   description:
     "A lightning-fast, highly-intuitive, browser-based screenwriting application.",
-  icons: [{ rel: "icon", url: "/favicon.png", type: "image/png" }],
+  manifest: "/manifest.json",
+  icons: [
+    { rel: "icon", url: "/favicon.png", type: "image/png" },
+    { rel: "apple-touch-icon", url: "/favicon.png" },
+  ],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "FADEX",
+  },
 };
 
 export default function RootLayout({
@@ -47,6 +57,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${spaceGrotesk.variable} ${courierPrime.variable} ${orbitron.variable} antialiased`}
       >
+        <PWAHandler />
         {children}
         <Analytics />
       </body>

@@ -15,11 +15,9 @@ export default function EditorPage({ params }: EditorPageProps) {
   const { id } = use(params);
 
   return (
-    <div className="bg-background min-h-screen font-sans flex flex-col print:bg-white print:text-black">
-      <main className="flex-1 w-full pb-12 print:p-0 print:bg-white print:overflow-visible my-print-container">
-        <Editor scriptId={id} />
-      </main>
-      <div className="fixed bottom-4 left-4 z-50 pointer-events-none">
+    <div className="bg-white dark:bg-zinc-900 sm:bg-background min-h-screen font-sans print:bg-white print:text-black">
+      <Editor scriptId={id} />
+      <div className="fixed bottom-6 left-6 z-50 pointer-events-none">
         <AutoSaveIndicator scriptId={id} />
       </div>
     </div>

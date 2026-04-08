@@ -43,14 +43,14 @@ export const getNextBlockType = (
 };
 
 export const getSmartNextBlockType = (current: BlockType): BlockType => {
-  // Logic for what block typically follows another when pressing Enter
+  // Logic for what block typically follows another when pressing Enter per spec
   switch (current) {
     case "scene_heading":
       return "action";
     case "character":
       return "dialogue";
     case "dialogue":
-      return "action";
+      return "dialogue"; // As per spec "DIALOGUE -> DIALOGUE"
     case "parenthetical":
       return "dialogue";
     case "transition":
@@ -58,4 +58,65 @@ export const getSmartNextBlockType = (current: BlockType): BlockType => {
     default:
       return "action";
   }
+};
+
+export const getTabNextBlockType = (
+  current: BlockType,
+  previousType?: BlockType,
+): BlockType => {
+  // Common sequence: Character -> Parenthetical -> Dialogue
+  const hasCharacterContext = previousType === "character" || previousType === "parenthetical";
+
+  switch (current) {
+    case "action":
+      return "character";
+    case "character":
+      return hasCharacterContext ? "parenthetical" : "transition";
+    case "parenthetical":
+      return "dialogue";
+    case "dialogue":
+      return "transition";
+    case "transition":
+      return "scene_heading";
+    case "scene_heading":
+      return "shot";
+    case "shot":
+      return "action";
+    case "montage":
+    case "text_on_screen":
+      return "action";
+    default:
+      return "character";
+  }
+};
+
+export const detectType = (content: string, currentType: BlockType): BlockType => {
+  const trimmed = content.trim();
+  const upper = trimmed.toUpperCase();
+
+  // Pattern: Scene Headings
+  if (upper.startsWith("INT.") || upper.startsWith("EXT.") || upper.startsWith("INT/EXT.") || upper.startsWith("EST.")) {
+    return "scene_heading";
+  }
+
+  // Pattern: Transitions
+  if (upper.endsWith("TO:") || upper === "FADE IN:" || upper === "FADE OUT:") {
+    return "transition";
+  }
+
+  // Pattern: Parentheticals
+  if (trimmed.startsWith("(") && currentType === "dialogue") {
+    return "parenthetical";
+  }
+
+  // Pattern: Character (All caps, not a known keyword)
+  // Only auto-switch to character if we were in action/transition
+  if (trimmed.length > 0 && upper === trimmed && (currentType === "action" || currentType === "transition" || currentType === "dialogue")) {
+     // Check if it looks like a scene heading/transition first
+     if (!upper.startsWith("INT.") && !upper.startsWith("EXT.") && !upper.endsWith("TO:")) {
+        return "character";
+     }
+  }
+
+  return currentType;
 };
