@@ -87,6 +87,37 @@ export function Editor({ scriptId }: EditorProps) {
     return list;
   }, [scriptState]);
 
+  // HIGH PERFORMANCE: Pre-calculate suggestions registry to avoid O(N) loops in every block
+  const suggestionsRegistry = useMemo(() => {
+    if (!scriptState?.blocks) return { characters: [], locations: [], transitions: [], shots: [] };
+    
+    const characters = new Set<string>();
+    const locations = new Set<string>();
+    const transitions = new Set<string>();
+    const shots = new Set<string>();
+
+    scriptState.blocks.forEach((b) => {
+      if (!b.content) return;
+      const content = b.content.trim().toUpperCase();
+      if (!content) return;
+
+      if (b.type === "character") characters.add(content);
+      if (b.type === "transition") transitions.add(content);
+      if (b.type === "shot") shots.add(content);
+      if (b.type === "scene_heading") {
+        const matchLoc = b.content.match(/^(?:INT\.|EXT\.|INT\.\/EXT\.|EXT\.\/INT\.|I\/E\.)\s+(.*?)(?:\s*-|$)/i);
+        if (matchLoc && matchLoc[1]) locations.add(matchLoc[1].trim().toUpperCase());
+      }
+    });
+
+    return {
+      characters: Array.from(characters).sort(),
+      locations: Array.from(locations).sort(),
+      transitions: Array.from(transitions).sort(),
+      shots: Array.from(shots).sort(),
+    };
+  }, [scriptState]);
+
   const currentScript = useMemo(
     () => dashboardScripts.find((s) => s.id === scriptId),
     [dashboardScripts, scriptId],
@@ -275,7 +306,7 @@ export function Editor({ scriptId }: EditorProps) {
                   <EditorBlock
                     key={`${block.id}-${block.type}`}
                     block={block}
-                    allBlocks={scriptState.blocks}
+                    suggestionsRegistry={suggestionsRegistry}
                     sceneNumber={block.sceneNumber}
                     isFocusMode={isFocusMode}
                     index={block.indexInFullList}

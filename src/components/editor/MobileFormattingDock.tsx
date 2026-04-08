@@ -61,8 +61,8 @@ export function MobileFormattingDock({
       className={cn(
         "fixed left-1/2 -translate-x-1/2 z-50 print:hidden overflow-hidden",
         isKeyboardVisible 
-          ? "bottom-auto left-0 translate-x-0 w-full bg-zinc-950/80 backdrop-blur-2xl border-b border-white/5 shadow-lg rounded-none" 
-          : "bottom-[max(1rem,env(safe-area-inset-bottom))] top-auto w-[calc(100%-32px)] max-w-md bg-[#121212]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
+          ? "top-[64px] bottom-auto left-0 translate-x-0 w-full bg-zinc-950/80 backdrop-blur-2xl border-b border-white/5 shadow-lg rounded-none" 
+          : "bottom-[max(1rem,env(safe-area-inset-bottom))] top-auto w-[calc(100%-32px)] max-w-2xl bg-[#121212]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
       )}
     >
       <div className="relative flex items-center">

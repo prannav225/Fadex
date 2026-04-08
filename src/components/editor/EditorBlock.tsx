@@ -20,7 +20,13 @@ interface EditorBlockProps {
   ) => void;
   onFocus: () => void;
   index: number;
-  allBlocks: ScreenplayBlock[];
+  allBlocks?: ScreenplayBlock[]; // Deprecated, use suggestionsRegistry
+  suggestionsRegistry: {
+    characters: string[];
+    locations: string[];
+    transitions: string[];
+    shots: string[];
+  };
   sceneNumber?: number;
   isFocusMode?: boolean;
   onDragStart?: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
@@ -66,7 +72,7 @@ const EditorBlockComponent = ({
   onKeyDown,
   onFocus,
   index,
-  allBlocks,
+  suggestionsRegistry,
   sceneNumber,
   isFocusMode,
   onDragStart,
@@ -74,9 +80,9 @@ const EditorBlockComponent = ({
   onDrop,
 }: EditorBlockProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const suggestions = useBlockSuggestions(isActive, block, allBlocks);
   const [localContent, setLocalContent] = useState(block.content);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const suggestions = useBlockSuggestions(isActive, localContent, block.type, suggestionsRegistry);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const [prevContent, setPrevContent] = useState(block.content);
