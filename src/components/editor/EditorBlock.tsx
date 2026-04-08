@@ -30,16 +30,18 @@ interface EditorBlockProps {
 
 // --- OPTIMIZED SUB-COMPONENTS ---
 
-const BlockTypeIndicator = memo(({ type, isActive }: { type: string; isActive: boolean }) => (
-  <div
-    className={cn(
-      "absolute left-4 top-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 text-[9px] font-brand uppercase tracking-widest px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-400 hidden sm:block print:hidden shadow-sm",
-      isActive && "opacity-100 bg-primary/20 text-primary",
-    )}
-  >
-    {type.replace("_", " ")}
-  </div>
-));
+const BlockTypeIndicator = memo(
+  ({ type, isActive }: { type: string; isActive: boolean }) => (
+    <div
+      className={cn(
+        "absolute left-4 top-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 text-[9px] font-brand uppercase tracking-widest px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-400 hidden sm:block print:hidden shadow-sm",
+        isActive && "opacity-100 bg-primary/20 text-primary",
+      )}
+    >
+      {type.replace("_", " ")}
+    </div>
+  ),
+);
 BlockTypeIndicator.displayName = "BlockTypeIndicator";
 
 const DragHandles = memo(({ isActive }: { isActive: boolean }) => {
@@ -74,6 +76,16 @@ const EditorBlockComponent = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const suggestions = useBlockSuggestions(isActive, block, allBlocks);
+  const [localContent, setLocalContent] = useState(block.content);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [prevContent, setPrevContent] = useState(block.content);
+
+  // Sync with external content changes (e.g. undo/redo or formatting) during render
+  if (block.content !== prevContent) {
+    setPrevContent(block.content);
+    setLocalContent(block.content);
+  }
 
   useEffect(() => {
     if (isActive && textareaRef.current) {
@@ -81,23 +93,50 @@ const EditorBlockComponent = ({
     }
   }, [isActive]);
 
+  const handleUpdate = (content: string) => {
+    setLocalContent(content);
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    // Sync to global store after a short pause
+    // For mobile, we use a longer debounce to prevent re-renders while typing
+    debounceRef.current = setTimeout(() => {
+      onUpdate(block.id, content);
+    }, 500);
+  };
+
   const handleBlur = () => {
-    if (block.type === "parenthetical" && block.content.trim() !== "") {
-      let updatedContent = block.content.trim();
-      if (!updatedContent.startsWith("(")) updatedContent = "(" + updatedContent;
+    // Immediate sync on blur
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (localContent !== block.content) {
+      onUpdate(block.id, localContent);
+    }
+
+    if (block.type === "parenthetical" && localContent.trim() !== "") {
+      let updatedContent = localContent.trim();
+      if (!updatedContent.startsWith("("))
+        updatedContent = "(" + updatedContent;
       if (!updatedContent.endsWith(")")) updatedContent = updatedContent + ")";
 
-      if (updatedContent !== block.content) {
+      if (updatedContent !== localContent) {
+        setLocalContent(updatedContent);
         onUpdate(block.id, updatedContent);
       }
     }
   };
 
-  const handleKeyDownWrapper = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDownWrapper = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) => {
     const key = e.key.toLowerCase();
-    
+
     // Rich Text Formatting (Bold/Italic/Underline)
-    if ((e.metaKey || e.ctrlKey) && (key === "b" || key === "i" || key === "u")) {
+    if (
+      (e.metaKey || e.ctrlKey) &&
+      (key === "b" || key === "i" || key === "u")
+    ) {
       e.preventDefault();
       const textarea = e.currentTarget;
       const start = textarea.selectionStart;
@@ -105,15 +144,15 @@ const EditorBlockComponent = ({
       if (start === end) return;
 
       const char = key === "b" ? "**" : key === "i" ? "*" : "_";
-      const selectedText = block.content.substring(start, end);
+      const selectedText = localContent.substring(start, end);
       const newContent =
-        block.content.substring(0, start) +
+        localContent.substring(0, start) +
         char +
         selectedText +
         char +
-        block.content.substring(end);
+        localContent.substring(end);
 
-      onUpdate(block.id, newContent);
+      handleUpdate(newContent);
 
       requestAnimationFrame(() => {
         if (textareaRef.current) {
@@ -130,18 +169,22 @@ const EditorBlockComponent = ({
     if (suggestions.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedIndex((prev) => (prev === -1 ? 0 : (prev + 1) % suggestions.length));
+        setSelectedIndex((prev) =>
+          prev === -1 ? 0 : (prev + 1) % suggestions.length,
+        );
         return;
       }
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((prev) => (prev <= 0 ? suggestions.length - 1 : prev - 1));
+        setSelectedIndex((prev) =>
+          prev <= 0 ? suggestions.length - 1 : prev - 1,
+        );
         return;
       }
       if (e.key === "Enter" && !e.shiftKey) {
         if (selectedIndex !== -1) {
           e.preventDefault();
-          onUpdate(block.id, suggestions[selectedIndex]);
+          handleUpdate(suggestions[selectedIndex]);
           setSelectedIndex(-1);
           return;
         }
@@ -177,10 +220,12 @@ const EditorBlockComponent = ({
 
       <TextareaAutosize
         ref={textareaRef}
-        placeholder={block.type === "scene_heading" ? "INT. LOCATION - DAY" : block.type}
-        value={block.content}
+        placeholder={
+          block.type === "scene_heading" ? "INT. LOCATION - DAY" : block.type
+        }
+        value={localContent}
         onChange={(e) => {
-          onUpdate(block.id, e.target.value);
+          handleUpdate(e.target.value);
           setSelectedIndex(-1);
         }}
         onKeyDown={handleKeyDownWrapper}
@@ -207,10 +252,12 @@ const EditorBlockComponent = ({
 
       {/* Suggestion layer */}
       {isActive && suggestions.length > 0 && (
-        <ul className={cn(
-          "absolute z-50 top-full left-0 mt-1 max-h-48 overflow-y-auto bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-lg",
-          getStylesForType(block.type),
-        )}>
+        <ul
+          className={cn(
+            "absolute z-50 top-full left-0 mt-1 max-h-48 overflow-y-auto bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-lg",
+            getStylesForType(block.type),
+          )}
+        >
           {suggestions.map((s, i) => (
             <li
               key={i}

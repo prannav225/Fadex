@@ -261,7 +261,10 @@ export function Editor({ scriptId }: EditorProps) {
                 className="editor-page print:shadow-none transition-transform duration-300 origin-top"
                 style={{ 
                   transform: scale < 1 ? `scale(${scale})` : "none",
-                  marginBottom: scale < 1 ? `-${1056 * (1 - scale)}px` : "2rem"
+                  marginBottom: scale < 1 ? `-${1056 * (1 - scale)}px` : "2rem",
+                  // MOBILE OPTIMIZATION: Only calculate layout for visible pages
+                  contentVisibility: "auto",
+                  containIntrinsicSize: "auto 1056px",
                 }}
               >
                 <div className="editor-page-strip-label print:hidden">
@@ -270,7 +273,7 @@ export function Editor({ scriptId }: EditorProps) {
 
                 {pageBlocks.map((block: PaginatedBlock) => (
                   <EditorBlock
-                    key={block.id}
+                    key={`${block.id}-${block.type}`}
                     block={block}
                     allBlocks={scriptState.blocks}
                     sceneNumber={block.sceneNumber}
