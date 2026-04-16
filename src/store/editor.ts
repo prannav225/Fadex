@@ -24,7 +24,12 @@ interface EditorState {
     content?: string,
     type?: BlockType,
   ) => string;
-  updateBlock: (scriptId: string, id: string, content: string) => void;
+  updateBlock: (
+    scriptId: string,
+    id: string,
+    content: string,
+    pushToHistory?: boolean,
+  ) => void;
   changeBlockType: (scriptId: string, id: string, type: BlockType) => void;
   cycleBlockType: (scriptId: string, id: string, reverse: boolean) => void;
   deleteBlock: (scriptId: string, id: string) => void;
@@ -121,7 +126,7 @@ export const useEditorStore = create<EditorState>()(
         return id;
       },
 
-      updateBlock: (scriptId, id, content) =>
+      updateBlock: (scriptId, id, content, pushToHistory = false) =>
         set((state) => {
           const scriptState = state.scripts[scriptId];
           if (!scriptState) return state;
@@ -137,7 +142,11 @@ export const useEditorStore = create<EditorState>()(
           return {
             scripts: {
               ...state.scripts,
-              [scriptId]: { ...scriptState, blocks: newBlocks }, // NO HISTORY PUSH ON TEXT UPDATE TO AVOID SPAM
+              [scriptId]: {
+                ...scriptState,
+                blocks: newBlocks,
+                ...(pushToHistory ? pushHistory(scriptState) : {}),
+              },
             },
           };
         }),
@@ -366,8 +375,7 @@ export const useEditorStore = create<EditorState>()(
               ...state.scripts,
               [scriptId]: {
                 blocks,
-                past: scriptState?.past || [],
-                future: scriptState?.future || [],
+                ...(scriptState ? pushHistory(scriptState) : { past: [], future: [] }),
               },
             },
           };

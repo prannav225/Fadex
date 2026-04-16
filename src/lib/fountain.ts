@@ -17,9 +17,11 @@ export const generateFountain = (
 
   if (metadata.title) fountain += `Title: ${metadata.title.toUpperCase()}\n`;
   if (metadata.author) fountain += `Author: ${metadata.author}\n`;
-  if (metadata.based_on) fountain += `Notes: ${metadata.based_on.replace(/\n/g, "\n       ")}\n`;
+  if (metadata.based_on)
+    fountain += `Notes: ${metadata.based_on.replace(/\n/g, "\n       ")}\n`;
   if (metadata.status) fountain += `Draft date: ${metadata.status}\n`;
-  if (metadata.contact_info) fountain += `Contact: ${metadata.contact_info.replace(/\n/g, "\n         ")}\n`;
+  if (metadata.contact_info)
+    fountain += `Contact: ${metadata.contact_info.replace(/\n/g, "\n         ")}\n`;
 
   if (fountain) fountain += "\n\n";
 
@@ -59,79 +61,137 @@ export const generateFountain = (
  */
 import { generateId } from "./uuid";
 
-export const parseFountain = (text: string): ScreenplayBlock[] => {
-  // Step 1: Normalize & Split (Preserving empty lines for structural context)
+export interface FountainImportModel {
+  blocks: ScreenplayBlock[];
+  metadata: {
+    title?: string;
+    author?: string;
+    notes?: string;
+    contact?: string;
+    draft_date?: string;
+  };
+}
+
+export const parseFountain = (text: string): FountainImportModel => {
   const lines = text.replace(/\r/g, "").split("\n");
   const blocks: ScreenplayBlock[] = [];
-  
-  // Step 4: Handle Context (CRITICAL for distinguishing Action vs. Dialogue)
-  let isInsideDialogue = false;
+  const metadata: FountainImportModel["metadata"] = {};
 
-  console.group("%c 🖋️ FADEX FOUNTAIN PARSER DEBUG ", "background: #136F63; color: white; font-weight: bold; padding: 2px 5px; border-radius: 3px;");
-  console.log("Input Normalized: Splitting into", lines.length, "lines.");
+  let i = 0;
+  let parsingMetadata = true;
+  let currentKey: string | null = null;
 
-  for (let i = 0; i < lines.length; i++) {
+  console.group(
+    "%c 🖋️ FADEX FOUNTAIN PARSER (V2.1) ",
+    "background: #136F63; color: white; font-weight: bold; padding: 2px 5px; border-radius: 3px;",
+  );
+
+  // --- STEP 1: METADATA EXTRACTION (Standard Fountain compliant) ---
+  while (i < lines.length && parsingMetadata) {
     const rawLine = lines[i];
     const line = rawLine.trim();
 
-    // Step 5: Handle Empty Lines Properly (Break dialogue blocks & reset context)
-    if (!line) {
-      if (isInsideDialogue) {
-        console.log(`[LINE ${i}] BLANK -> %cRESET DIALOGUE CONTEXT`, "color: #136F63; font-style: italic;");
+    if (line === "") {
+      if (currentKey) {
+        // Empty line AFTER metadata indicates start of body
+        parsingMetadata = false;
+        i++;
+        break;
+      } else {
+        // Skip leading empty lines
+        i++;
+        continue;
       }
+    }
+
+    const match = rawLine.match(/^([\w\s]+):\s*(.*)$/i);
+    if (match) {
+      currentKey = match[1].trim().toLowerCase();
+      const value = match[2].trim();
+
+      switch (currentKey) {
+        case "title": metadata.title = value; break;
+        case "author":
+        case "authors": metadata.author = value; break;
+        case "notes":
+        case "based on": metadata.notes = value; break;
+        case "contact":
+        case "contact info": metadata.contact = value; break;
+        case "draft date":
+        case "date": metadata.draft_date = value; break;
+      }
+    } else if (currentKey && (rawLine.startsWith(" ") || rawLine.startsWith("\t"))) {
+      // Continuation line for the current metadata key
+      const value = line;
+      switch (currentKey) {
+        case "title": metadata.title += "\n" + value; break;
+        case "author":
+        case "authors": metadata.author += "\n" + value; break;
+        case "notes":
+        case "based on": metadata.notes += "\n" + value; break;
+        case "contact":
+        case "contact info": metadata.contact += "\n" + value; break;
+        case "draft date":
+        case "date": metadata.draft_date += "\n" + value; break;
+      }
+    } else {
+      // Line is not a Key: Value and not indented -> Start of body
+      parsingMetadata = false;
+    }
+
+    if (parsingMetadata) i++;
+  }
+
+  // --- STEP 2: BODY PARSING ---
+  let isInsideDialogue = false;
+
+  for (; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const line = rawLine.trim();
+
+    if (!line) {
       isInsideDialogue = false;
       continue;
     }
 
+    // INDUSTRY HARDENING: Strip formatting tags before type detection
+    // e.g. **INT. ROOM** should be detected as a scene heading
+    const cleanLine = line.replace(/(\*\*|\*|_)/g, "");
+    const upper = cleanLine.toUpperCase();
+
     let type: BlockType = "action";
 
-    // 1. Scene Heading: Starts with specific location markers
-    if (line.match(/^(INT\.|EXT\.|INT\/EXT\.|I\/E|EST\.)/i)) {
+    if (cleanLine.match(/^(INT\.|EXT\.|INT\/EXT\.|I\/E|EST\.)/i)) {
       type = "scene_heading";
       isInsideDialogue = false;
-    } 
-    // 2. Transition: All caps and ends with colon
-    else if (line === line.toUpperCase() && (line.endsWith(":") || line.startsWith("FADE "))) {
+    } else if (upper === cleanLine && (cleanLine.endsWith(":") || cleanLine.startsWith("FADE "))) {
       type = "transition";
       isInsideDialogue = false;
-    }
-    // 3. Parenthetical: Wrapped in parentheses
-    else if (line.startsWith("(") && line.endsWith(")")) {
+    } else if (cleanLine.startsWith("(") && cleanLine.endsWith(")")) {
       type = "parenthetical";
-      // context remains dialogue
-    }
-    // 4. Character: ALL CAPS + short length + NOT inside dialogue yet
-    else if (line === line.toUpperCase() && line.length < 35 && !isInsideDialogue) {
+    } else if (upper === cleanLine && cleanLine.length > 0 && cleanLine.length < 35 && !isInsideDialogue) {
       type = "character";
-      isInsideDialogue = true; // Lock context for following lines
-    }
-    // 5. Dialogue: Captured if we are locked in dialogue context
-    else if (isInsideDialogue) {
+      isInsideDialogue = true;
+    } else if (isInsideDialogue) {
       type = "dialogue";
-    }
-    // 6. Action: Fallback for all other text
-    else {
+    } else {
       type = "action";
       isInsideDialogue = false;
     }
 
-    // Step 2 & 7: Debug Logging & Validation
-    console.log(`[LINE ${i}] "${line.substring(0, 40)}${line.length > 40 ? "..." : ""}" %c-> ${type.toUpperCase()}`, "color: #136F63; font-weight: bold;");
-
     blocks.push({
       id: generateId(),
       type,
-      content: line,
+      content: line, // Store original line with formatting
     });
   }
 
   console.log("✅ PARSING COMPLETE. Total Blocks:", blocks.length);
   console.groupEnd();
 
-  // Ensure we don't return an empty project (Step 7)
   if (blocks.length === 0) {
-    return [{ id: generateId(), type: "action", content: "" }];
+    blocks.push({ id: generateId(), type: "action", content: "" });
   }
 
-  return blocks;
+  return { blocks, metadata };
 };

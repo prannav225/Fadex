@@ -47,17 +47,19 @@ export function Editor({ scriptId }: EditorProps) {
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [isNavOpen, setIsNavOpen] = useState(true);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
-  const [isPrintReady, setIsPrintReady] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
-  
+
   // --- RESPONSIVE STATE ---
   const { width } = useWindowSize();
   const isMobile = width < 768;
   const isTabletOrMobile = width < 1280;
 
+  // --- MOBILE OPTIMIZATION: SCALE TO FIT SCREEN WIDTH ---
   const scale = useMemo(() => {
     if (!isMobile) return 1;
-    return Math.min(1, (width - 24) / 850);
+    // Standard page width is 816px. We want padding on sides.
+    const availableWidth = width - 32; 
+    return Math.min(1, availableWidth / 816);
   }, [width, isMobile]);
 
   // --- DEBOUNCED PAGINATION ---
@@ -67,15 +69,17 @@ export function Editor({ scriptId }: EditorProps) {
   const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // --- DERIVED STATE ---
-  const activeBlock = useMemo(
-    () => scriptState?.blocks?.find((b) => b.id === activeBlockId),
-    [scriptState, activeBlockId],
-  );
+  const activeBlock = useMemo(() => {
+    const blocks = scriptState?.blocks;
+    if (!Array.isArray(blocks)) return null;
+    return blocks.find((b) => b.id === activeBlockId);
+  }, [scriptState, activeBlockId]);
 
   const scenesList = useMemo(() => {
-    if (!scriptState?.blocks) return [];
+    const blocks = scriptState?.blocks;
+    if (!Array.isArray(blocks)) return [];
     const list: { id: string; num: number; content: string }[] = [];
-    scriptState.blocks.forEach((block) => {
+    blocks.forEach((block) => {
       if (block.type === "scene_heading") {
         list.push({
           id: block.id,
@@ -87,16 +91,18 @@ export function Editor({ scriptId }: EditorProps) {
     return list;
   }, [scriptState]);
 
-  // HIGH PERFORMANCE: Pre-calculate suggestions registry to avoid O(N) loops in every block
+  // HIGH PERFORMANCE: Suggestions Registry
   const suggestionsRegistry = useMemo(() => {
-    if (!scriptState?.blocks) return { characters: [], locations: [], transitions: [], shots: [] };
-    
+    const blocks = scriptState?.blocks;
+    if (!Array.isArray(blocks))
+      return { characters: [], locations: [], transitions: [], shots: [] };
+
     const characters = new Set<string>();
     const locations = new Set<string>();
     const transitions = new Set<string>();
     const shots = new Set<string>();
 
-    scriptState.blocks.forEach((b) => {
+    blocks.forEach((b) => {
       if (!b.content) return;
       const content = b.content.trim().toUpperCase();
       if (!content) return;
@@ -105,8 +111,11 @@ export function Editor({ scriptId }: EditorProps) {
       if (b.type === "transition") transitions.add(content);
       if (b.type === "shot") shots.add(content);
       if (b.type === "scene_heading") {
-        const matchLoc = b.content.match(/^(?:INT\.|EXT\.|INT\.\/EXT\.|EXT\.\/INT\.|I\/E\.)\s+(.*?)(?:\s*-|$)/i);
-        if (matchLoc && matchLoc[1]) locations.add(matchLoc[1].trim().toUpperCase());
+        const matchLoc = b.content.match(
+          /^(?:INT\.|EXT\.|INT\.\/EXT\.|EXT\.\/INT\.|I\/E\.)\s+(.*?)(?:\s*-|$)/i,
+        );
+        if (matchLoc && matchLoc[1])
+          locations.add(matchLoc[1].trim().toUpperCase());
       }
     });
 
@@ -125,27 +134,24 @@ export function Editor({ scriptId }: EditorProps) {
 
   // --- EFFECT: DEBOUNCED PAGINATION ---
   useEffect(() => {
-    if (!scriptState?.blocks) return;
+    const blocks = scriptState?.blocks;
+    if (!Array.isArray(blocks)) return;
 
     // Reset idle state when content changes
-    setIsIdle(false);
+    if (isIdle) {
+      window.requestAnimationFrame(() => setIsIdle(false));
+    }
     if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
-    
-    // Set to idle after 2 seconds of inactivity
-    idleTimeoutRef.current = setTimeout(() => {
-      setIsIdle(true);
-    }, 2000);
+    idleTimeoutRef.current = setTimeout(() => setIsIdle(true), 2000);
 
     if (paginationTimeoutRef.current) clearTimeout(paginationTimeoutRef.current);
 
     const runPagination = () => {
-      // Use STRICT pagination if on desktop, exported, or idle
-      const isStrict = !isMobile || isIdle || isPrintReady;
-      const pages = paginateBlocks(scriptState.blocks, isStrict);
+      // Use STRICT pagination for 1:1 parity with PDF
+      const pages = paginateBlocks(blocks, true);
       setPaginatedPages(pages);
     };
 
-    // If mobile and not idle, use longer debounce for performance
     const delay = isMobile && !isIdle ? 400 : 50;
     paginationTimeoutRef.current = setTimeout(runPagination, delay);
 
@@ -153,7 +159,7 @@ export function Editor({ scriptId }: EditorProps) {
       if (paginationTimeoutRef.current) clearTimeout(paginationTimeoutRef.current);
       if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
     };
-  }, [scriptState, isMobile, isIdle, isPrintReady]);
+  }, [scriptState, isMobile, isIdle]);
 
   // --- CUSTOM HOOKS ---
   const { handleKeyDown } = useEditorEvents({
@@ -169,8 +175,6 @@ export function Editor({ scriptId }: EditorProps) {
     setActiveBlockId,
   });
 
-  // --- EFFECTS ---
-
   // Initialization
   useEffect(() => {
     initializeScript(scriptId);
@@ -179,17 +183,15 @@ export function Editor({ scriptId }: EditorProps) {
   // Handle mobile responsive nav closure
   useEffect(() => {
     if (isTabletOrMobile && isNavOpen) {
-      setIsNavOpen(false);
+      window.requestAnimationFrame(() => setIsNavOpen(false));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isTabletOrMobile]);
+  }, [isTabletOrMobile, isNavOpen, setIsNavOpen]);
 
   // Cleanup orphaned active block IDs
   useEffect(() => {
     if (scriptState && activeBlockId) {
       const exists = scriptState.blocks.some((b) => b.id === activeBlockId);
       if (!exists) {
-        // Defer state update to avoid cascading render warning during bulk deletes
         const timeout = setTimeout(() => setActiveBlockId(null), 0);
         return () => clearTimeout(timeout);
       }
@@ -231,28 +233,20 @@ export function Editor({ scriptId }: EditorProps) {
   // --- RENDER ---
   if (!scriptState) {
     return (
-      <div className="p-8 text-center bg-zinc-50 dark:bg-zinc-950/80 backdrop-blur-3xl m-8 rounded-[2rem] border-2 border-dashed border-black/5 flex flex-col items-center justify-center min-h-[40vh] text-zinc-400 font-brand uppercase tracking-widest text-[10px]">
+      <div className="p-8 text-center bg-[#FDFCF9] m-8 rounded-[2rem] border-2 border-dashed border-black/5 flex flex-col items-center justify-center min-h-[40vh] text-zinc-400 font-brand uppercase tracking-widest text-[10px]">
         Loading Editor...
       </div>
     );
   }
 
   return (
-    <div
-      id="script-editor-root"
-      className={cn(
-        "relative transition-colors duration-500",
-        isPrintReady && "print-ready-mode",
-      )}
-    >
+    <div id="script-editor-root" className="relative transition-colors duration-500">
       <EditorHeader
         scriptId={scriptId}
         isNavOpen={isNavOpen}
         setIsNavOpen={setIsNavOpen}
         isFocusMode={isFocusMode}
         setIsFocusMode={setIsFocusMode}
-        isPrintReady={isPrintReady}
-        setIsPrintReady={setIsPrintReady}
         setIsShortcutsOpen={setIsShortcutsOpen}
         setIsExportOpen={setIsExportOpen}
       />
@@ -261,7 +255,7 @@ export function Editor({ scriptId }: EditorProps) {
       <div
         onClick={() => setIsNavOpen(false)}
         className={cn(
-          "fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-500",
+          "fixed inset-0 bg-black/40 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-500",
           isNavOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
       />
@@ -278,22 +272,21 @@ export function Editor({ scriptId }: EditorProps) {
 
         <div
           className={cn(
-            "w-full mb-32 shrink print:max-w-none print:m-0 print:p-0 print:w-full flex justify-center",
-            isFocusMode ? "pt-24 lg:pt-32" : "pt-[64px] lg:pt-32",
+            "w-full shrink print:max-w-none print:m-0 print:p-0 print:w-full flex justify-center",
+            isFocusMode ? "pt-24 lg:pt-32" : "pt-[72px] lg:pt-36",
           )}
         >
-          <div 
+          <div
             id="script-editor-canvas"
-            className="flex flex-col items-center gap-8 px-4 sm:px-0"
+            className="flex flex-col items-center sm:gap-8 px-4 sm:px-0"
           >
             {paginatedPages.map((pageBlocks: PageData, pageIdx: number) => (
-              <div 
-                key={pageIdx} 
-                className="editor-page print:shadow-none transition-transform duration-300 origin-top"
-                style={{ 
+              <div
+                key={pageIdx}
+                className="editor-page print:shadow-none transition-all duration-300 origin-top"
+                style={{
                   transform: scale < 1 ? `scale(${scale})` : "none",
-                  marginBottom: scale < 1 ? `-${1056 * (1 - scale)}px` : "2rem",
-                  // MOBILE OPTIMIZATION: Only calculate layout for visible pages
+                  marginBottom: scale < 1 ? `-${1056 * (1 - scale) - 16}px` : "2.5rem",
                   contentVisibility: "auto",
                   containIntrinsicSize: "auto 1056px",
                 }}
@@ -343,6 +336,8 @@ export function Editor({ scriptId }: EditorProps) {
         activeBlockId={activeBlockId}
         activeBlockType={activeBlock?.type}
         changeBlockType={changeBlockType}
+        undo={undo}
+        redo={redo}
       />
 
       {scriptState.blocks && (

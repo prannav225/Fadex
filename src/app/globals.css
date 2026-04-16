@@ -50,13 +50,13 @@
 
 :root {
   --radius: 1.25rem;
-  --background: #f3efe0; /* Eggshell */
-  --foreground: #191919; /* Carbon Black */
+  --background: #FDFCF9;
+  --foreground: #191919;
   --card: #ffffff;
   --card-foreground: #191919;
   --popover: #ffffff;
   --popover-foreground: #191919;
-  --primary: #136f63; /* Blue Spruce */
+  --primary: #136f63;
   --primary-foreground: #f3efe0;
   --secondary: #e5e1d3;
   --secondary-foreground: #191919;
@@ -120,18 +120,21 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased selection:bg-[#136F63]/10;
     background-image:
-      radial-gradient(at 0% 0%, rgba(19, 111, 99, 0.08) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(19, 111, 99, 0.05) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(19, 111, 99, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(212, 195, 163, 0.1) 0px, transparent 50%);
     background-attachment: fixed;
     background-color: var(--background);
   }
 
-  button, [role="button"], a {
-    cursor: pointer !important;
+  button,
+  [role="button"],
+  a {
+    @apply cursor-pointer transition-all duration-300 active:scale-95;
   }
 }
 
@@ -142,7 +145,8 @@
   }
 
   /* Reset layout for print */
-  html, body {
+  html,
+  body {
     background: white !important;
     color: black !important;
     margin: 0 !important;
@@ -176,13 +180,12 @@
     line-height: 1.2 !important;
   }
 
-  /* Each page is a discrete physical sheet */
   .print-page {
     position: relative !important;
     display: block !important;
     width: 8.5in !important;
     height: 11in !important;
-    padding: 1in 1in 1in 1.5in !important; 
+    padding: 1in 1in 1in 1.5in !important;
     page-break-after: always !important;
     overflow: hidden !important;
     background: white !important;
@@ -196,68 +199,13 @@
     page-break-after: avoid !important;
   }
 
-  .print-block {
-    display: block !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    page-break-inside: avoid !important;
+  /* Global typography override for all print descendants */
+  #fadex-print-container * {
     font-family: inherit !important;
-    font-size: 12pt !important;
-  }
-
-  /* Industry Element Styling */
-  .print-scene_heading {
-    text-transform: uppercase !important;
-    font-weight: bold !important;
-    margin-top: 12pt !important;
-    margin-bottom: 12pt !important;
-  }
-
-  .print-action {
-    margin-top: 12pt !important;
-    margin-bottom: 12pt !important;
-    text-transform: none !important;
-  }
-
-  .print-character {
-    margin-left: 2.2in !important;
-    width: 3in !important;
-    margin-top: 12pt !important;
-    margin-bottom: 0 !important;
-    text-transform: uppercase !important;
-    text-align: left !important;
-  }
-
-  .print-parenthetical {
-    margin-left: 1.6in !important;
-    width: 2.5in !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    text-transform: none !important;
-  }
-
-  .print-dialogue {
-    margin-left: 1in !important;
-    width: 3.5in !important;
-    margin-bottom: 12pt !important;
-    text-transform: none !important;
-  }
-
-  .print-transition {
-    margin-left: auto !important;
-    text-align: right !important;
-    width: 2.5in !important;
-    margin-top: 12pt !important;
-    margin-bottom: 12pt !important;
-    text-transform: uppercase !important;
-  }
-
-  .print-shot {
-    text-transform: uppercase !important;
-    font-weight: bold !important;
-    margin-top: 24pt !important;
-    margin-bottom: 12pt !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    color: inherit !important;
+    visibility: visible !important;
   }
 
   .print-page-number {
@@ -280,7 +228,9 @@
     padding: 0 !important;
   }
 
-  .print-title-top-shim { height: 3.5in !important; }
+  .print-title-top-shim {
+    height: 3.5in !important;
+  }
 
   .print-title-main {
     text-align: center !important;
@@ -322,21 +272,12 @@
     font-size: 12pt !important;
     white-space: pre-wrap !important;
   }
-
-  /* Global typography override for all print descendants */
-  #fadex-print-container * {
-    font-family: inherit !important;
-    font-size: inherit !important;
-    line-height: inherit !important;
-    color: inherit !important;
-    visibility: visible !important;
-  }
 }
 
 /* Discrete Page Rendering System */
 #script-editor-root {
-  background-color: #f3efe0 !important; /* Beige Desk */
-  min-height: 100vh;
+  background-color: #FDFCF9 !important; 
+  min-height: 100dvh;
   width: 100%;
 }
 
@@ -346,7 +287,7 @@
   width: 100% !important;
   max-width: none !important;
   margin: 0 auto !important;
-  padding: 40px 0 !important;
+  padding: 40px 0 160px 0 !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
@@ -360,23 +301,41 @@
   background: white !important;
   padding: 1in 1in 1in 1.5in !important;
   position: relative !important;
-  box-shadow: 
-    0 10px 40px -10px rgba(0,0,0,0.1),
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 10px 40px -10px rgba(0, 0, 0, 0.1),
     0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
   flex-shrink: 0 !important;
   transform-origin: top center;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 4px;
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border-radius: 2px;
+}
+
+.editor-page:hover {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.08),
+    0 20px 60px -15px rgba(0, 0, 0, 0.1),
+    0 8px 12px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 
+ * MARGIN SUPPRESSION AT TOP OF PAGE
+ * Screenplay standard: Text starts exactly at the top margin (1.0")
+ */
+.editor-page > .editor-block:first-child,
+.print-page > div:first-child {
+  margin-top: 0 !important;
 }
 
 #script-editor-canvas textarea {
   color: #1a1a1a !important;
   font-size: 16px !important;
-  line-height: 1.2 !important;
+  line-height: 1.25 !important;
   font-family: var(--font-courier-prime), monospace !important;
+  letter-spacing: -0.01em;
 }
 
 .editor-page-strip-label {
@@ -396,37 +355,52 @@
 
 /* 
  * MOBILE READABILITY OVERRIDES
- * We boost the visual size on mobile but keep logical size constant
  */
 @media (max-width: 768px) {
   #script-editor-root {
-    background-color: #f8f7f2 !important;
+    background-color: #FDFCF9 !important;
+  }
+
+  #script-editor-canvas {
+    padding: 20px 0 140px 0 !important;
   }
 
   #script-editor-canvas textarea {
-    font-size: 18px !important; /* Better readability on small screens */
-    line-height: 1.1 !important;
+    font-size: 18px !important; 
+    line-height: 1.2 !important;
   }
 
   .editor-page-strip-label {
     display: none;
   }
-  
+
   .editor-page {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
     border-radius: 0;
   }
 }
 
-@media print {
-  #script-editor-root {
-    background: white !important;
-  }
-  .editor-page {
-    box-shadow: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 8.5in !important;
-    height: 11in !important;
-  }
+/* --- PREMIUM UI UTILITIES --- */
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.premium-scrollbar::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+.premium-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.premium-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+}
+.premium-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(19, 111, 99, 0.2);
 }

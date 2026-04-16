@@ -5,6 +5,7 @@ import { paginateBlocks, PageData, PaginatedBlock } from "@/lib/pagination";
 import { ScreenplayBlock } from "@/lib/editor-types";
 import { renderFountainText } from "@/lib/fountain-renderer";
 import { cn } from "@/lib/utils";
+import { getStylesForType } from "@/lib/editor-constants";
 
 interface PrintContainerProps {
   blocks: ScreenplayBlock[];
@@ -18,7 +19,8 @@ interface PrintContainerProps {
 }
 
 export function PrintContainer({ blocks, metadata }: PrintContainerProps) {
-  const pages = paginateBlocks(blocks);
+  // Always use STRICT pagination for PDF export to ensure zero orphans/widows
+  const pages = paginateBlocks(blocks, true);
 
   return createPortal(
     <div id="fadex-print-container" className="hidden print:block">
@@ -31,6 +33,16 @@ export function PrintContainer({ blocks, metadata }: PrintContainerProps) {
           <div className="print-title-author">
             {metadata.author || "Unknown Author"}
           </div>
+          {metadata.based_on && (
+            <div className="print-title-notes">
+              {metadata.based_on}
+            </div>
+          )}
+          {metadata.contact_info && (
+            <div className="print-title-contact">
+              {metadata.contact_info}
+            </div>
+          )}
         </div>
       )}
 
@@ -47,8 +59,8 @@ export function PrintContainer({ blocks, metadata }: PrintContainerProps) {
             <div
               key={block.id}
               className={cn(
-                "print-block",
-                `print-${block.type}`
+                "whitespace-pre-wrap",
+                getStylesForType(block.type)
               )}
             >
               {renderFountainText(block.content || "")}
