@@ -5,6 +5,7 @@ import {
   Courier_Prime,
   Orbitron,
 } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { PWAHandler } from "@/components/editor/PWAHandler";
